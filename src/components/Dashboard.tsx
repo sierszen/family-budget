@@ -13,42 +13,44 @@ import { BudgetCard } from './BudgetCard';
 import { ExpenseChart } from './ExpenseChart';
 import { RecentTransactions } from './RecentTransactions';
 import { AIInsights } from './AIInsights';
+import { useStats } from '@/hooks/useStats';
 
 export function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const { stats, loading } = useStats();
 
-  const stats = [
+  const statsCards = [
     {
       title: 'Przychody',
-      value: '8,420 zł',
-      change: '+12.5%',
+      value: loading ? 'Ładowanie...' : `${stats.income.toFixed(2)} zł`,
+      change: '+0%',
       changeType: 'positive' as const,
       icon: TrendingUp,
       color: 'green'
     },
     {
       title: 'Wydatki',
-      value: '6,240 zł',
-      change: '+8.2%',
+      value: loading ? 'Ładowanie...' : `${stats.expenses.toFixed(2)} zł`,
+      change: '+0%',
       changeType: 'negative' as const,
       icon: TrendingDown,
       color: 'red'
     },
     {
       title: 'Oszczędności',
-      value: '2,180 zł',
-      change: '+15.3%',
-      changeType: 'positive' as const,
+      value: loading ? 'Ładowanie...' : `${stats.savings.toFixed(2)} zł`,
+      change: '+0%',
+      changeType: stats.savings >= 0 ? 'positive' as const : 'negative' as const,
       icon: DollarSign,
-      color: 'blue'
+      color: stats.savings >= 0 ? 'blue' : 'red'
     },
     {
       title: 'Limit miesięczny',
-      value: '78%',
-      change: '22% pozostało',
-      changeType: 'warning' as const,
+      value: loading ? 'Ładowanie...' : `${stats.budgetLimit}%`,
+      change: `${100 - stats.budgetLimit}% pozostało`,
+      changeType: stats.budgetLimit > 80 ? 'warning' as const : 'positive' as const,
       icon: Target,
-      color: 'orange'
+      color: stats.budgetLimit > 80 ? 'orange' : 'green'
     }
   ];
 
@@ -76,7 +78,7 @@ export function Dashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
+        {statsCards.map((stat, index) => (
           <BudgetCard key={index} {...stat} />
         ))}
       </div>
@@ -113,18 +115,20 @@ export function Dashboard() {
         <RecentTransactions />
       </div>
 
-      {/* Alerts */}
-      <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6">
-        <div className="flex items-start space-x-3">
-          <AlertTriangle className="h-6 w-6 text-orange-600 mt-1" />
-          <div>
-            <h4 className="font-semibold text-orange-900">Uwaga: Przekroczenie limitu</h4>
-            <p className="text-orange-700 mt-1">
-              Wydatki na rozrywkę przekroczyły limit o 15%. Rozważ ograniczenie wydatków w tej kategorii.
-            </p>
+      {/* Alerts - tylko jeśli są przekroczenia */}
+      {stats.budgetLimit > 80 && (
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl p-6">
+          <div className="flex items-start space-x-3">
+            <AlertTriangle className="h-6 w-6 text-orange-600 mt-1" />
+            <div>
+              <h4 className="font-semibold text-orange-900">Uwaga: Przekroczenie limitu</h4>
+              <p className="text-orange-700 mt-1">
+                Wydatki przekroczyły {stats.budgetLimit}% przychodów. Rozważ ograniczenie wydatków.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

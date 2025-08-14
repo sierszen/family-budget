@@ -19,7 +19,7 @@ const menuItems = [
   { name: 'Dashboard', icon: Home, href: '/' },
   { name: 'Transakcje', icon: CreditCard, href: '/transactions' },
   { name: 'Analizy', icon: BarChart3, href: '/analytics' },
-  { name: 'Rodzina', icon: Users, href: '/members' },
+  { name: 'Rodzina', icon: Users, href: '/family' },
   { name: 'Raporty', icon: FileText, href: '/reports' },
   { name: 'Ustawienia', icon: Settings, href: '/settings' },
 ]
