@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
       })
 
       const totalExpenses = Number(monthExpenses._sum.amount || 0) + parseFloat(amount)
-      
+
       if (totalExpenses > Number(budgetLimit.amount)) {
         await createNotification(
           session.user.id,

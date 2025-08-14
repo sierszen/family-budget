@@ -8,19 +8,19 @@ export async function generateBudgetInsights(transactions: any[], familyData: an
   try {
     const prompt = `
     Analizuj dane finansowe rodziny i wygeneruj inteligentne podpowiedzi:
-    
+
     Transakcje z ostatnich 30 dni:
     ${JSON.stringify(transactions, null, 2)}
-    
+
     Informacje o rodzinie:
     ${JSON.stringify(familyData, null, 2)}
-    
+
     Wygeneruj 3-5 konkretnych, praktycznych podpowiedzi w języku polskim dotyczących:
     1. Oszczędności i optymalizacji wydatków
     2. Trendów w wydatkach
     3. Rekomendacji dotyczących budżetu
     4. Alertów o potencjalnych problemach
-    
+
     Format odpowiedzi: JSON z tablicą obiektów zawierających:
     - type: "savings" | "alert" | "tip"
     - title: krótki tytuł
@@ -70,10 +70,10 @@ export async function generateExpensePrediction(historicalData: any[]) {
   try {
     const prompt = `
     Na podstawie historycznych danych wydatków, przewidź wydatki na następny miesiąc:
-    
+
     Dane historyczne:
     ${JSON.stringify(historicalData, null, 2)}
-    
+
     Wygeneruj predykcję w formacie JSON:
     {
       "predictedAmount": number,

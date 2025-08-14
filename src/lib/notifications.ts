@@ -28,7 +28,7 @@ export async function sendBudgetAlertEmail(userId: string, alertData: any) {
               <li>Limit: ${alertData.limit} zł</li>
             </ul>
           </div>
-          <a href="${process.env.NEXTAUTH_URL}/dashboard" 
+          <a href="${process.env.NEXTAUTH_URL}/dashboard"
              style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
             Sprawdź dashboard
           </a>
@@ -108,7 +108,7 @@ export async function sendWeeklyReport(userId: string) {
               <li>${t.title} - ${t.amount} zł (${t.category.name})</li>
             `).join('')}
           </ul>
-          <a href="${process.env.NEXTAUTH_URL}/analytics" 
+          <a href="${process.env.NEXTAUTH_URL}/analytics"
              style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
             Zobacz szczegółowe analizy
           </a>

@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     // Pobierz dane o rodzinie
     const familyData = {
-      name: user.family.name,
+      name: user.family?.name || 'Unknown Family',
       memberCount: await prisma.user.count({
         where: { familyId: user.familyId }
       }),
