@@ -46,7 +46,7 @@ export function LoginPrompt() {
       } else {
         // Rejestracja
         console.log('Próba rejestracji...', { email: formData.email, name: formData.name })
-        
+
         const response = await fetch('/api/auth/register', {
           method: 'POST',
           headers: {
@@ -56,7 +56,7 @@ export function LoginPrompt() {
         })
 
         console.log('Status odpowiedzi:', response.status)
-        
+
         const data = await response.json()
         console.log('Odpowiedź serwera:', data)
 

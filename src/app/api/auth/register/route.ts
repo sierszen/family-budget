@@ -5,7 +5,7 @@ import { hashPassword, validateEmail, validatePassword } from '@/lib/auth'
 export async function POST(request: NextRequest) {
   try {
     console.log('Rozpoczynam rejestrację użytkownika...')
-    
+
     const body = await request.json()
     console.log('Otrzymane dane:', { email: body.email, name: body.name, hasPassword: !!body.password })
 
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Sprawdzam czy użytkownik już istnieje...')
-    
+
     // Sprawdź czy użytkownik już istnieje
     const existingUser = await prisma.user.findUnique({
       where: { email }
@@ -53,12 +53,12 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Hashuję hasło...')
-    
+
     // Hashuj hasło
     const hashedPassword = await hashPassword(password)
 
     console.log('Tworzę użytkownika...')
-    
+
     // Utwórz użytkownika
     const user = await prisma.user.create({
       data: {
@@ -116,13 +116,13 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Błąd rejestracji:', error)
-    
+
     // Sprawdź typ błędu
     if (error instanceof Error) {
       console.error('Szczegóły błędu:', error.message)
       console.error('Stack trace:', error.stack)
     }
-    
+
     return NextResponse.json(
       { error: 'Błąd serwera podczas rejestracji', details: error instanceof Error ? error.message : 'Nieznany błąd' },
       { status: 500 }
