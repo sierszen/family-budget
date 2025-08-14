@@ -44,7 +44,6 @@ const reports = [
 
 export default function ReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [selectedReport, setSelectedReport] = useState<number | null>(null);
 
   return (
     <div className="space-y-6">

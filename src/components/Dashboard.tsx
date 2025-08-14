@@ -22,7 +22,7 @@ export function Dashboard() {
       title: 'Przychody',
       value: '8,420 zł',
       change: '+12.5%',
-      changeType: 'positive',
+      changeType: 'positive' as const,
       icon: TrendingUp,
       color: 'green'
     },
@@ -30,7 +30,7 @@ export function Dashboard() {
       title: 'Wydatki',
       value: '6,240 zł',
       change: '+8.2%',
-      changeType: 'negative',
+      changeType: 'negative' as const,
       icon: TrendingDown,
       color: 'red'
     },
@@ -38,7 +38,7 @@ export function Dashboard() {
       title: 'Oszczędności',
       value: '2,180 zł',
       change: '+15.3%',
-      changeType: 'positive',
+      changeType: 'positive' as const,
       icon: DollarSign,
       color: 'blue'
     },
@@ -46,7 +46,7 @@ export function Dashboard() {
       title: 'Limit miesięczny',
       value: '78%',
       change: '22% pozostało',
-      changeType: 'warning',
+      changeType: 'warning' as const,
       icon: Target,
       color: 'orange'
     }

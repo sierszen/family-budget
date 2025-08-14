@@ -51,7 +51,7 @@ const data = [
   },
 ];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
   if (active && payload && payload.length) {
     const current = payload[0].value;
     const previous = payload[1].value;

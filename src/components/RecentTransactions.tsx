@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpRight, ArrowDownLeft, ShoppingCart, Car, Home, Utensils } from 'lucide-react';
+import { ArrowUpRight, ShoppingCart, Car, Home, Utensils } from 'lucide-react';
 
 const transactions = [
   {
