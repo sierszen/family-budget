@@ -1,70 +1,82 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import {
-  Home,
-  Wallet,
-  TrendingUp,
-  Users,
-  BarChart3,
+import { useState } from 'react'
+import { 
+  Home, 
+  CreditCard, 
+  BarChart3, 
+  Users, 
+  FileText, 
   Settings,
   Plus,
   ChevronLeft,
   ChevronRight
-} from 'lucide-react';
+} from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const menuItems = [
-  { icon: Home, label: 'Dashboard', href: '/' },
-  { icon: Wallet, label: 'Transakcje', href: '/transactions' },
-  { icon: TrendingUp, label: 'Analizy', href: '/analytics' },
-  { icon: Users, label: 'Członkowie', href: '/members' },
-  { icon: BarChart3, label: 'Raporty', href: '/reports' },
-  { icon: Settings, label: 'Ustawienia', href: '/settings' },
-];
+  { name: 'Dashboard', icon: Home, href: '/' },
+  { name: 'Transakcje', icon: CreditCard, href: '/transactions' },
+  { name: 'Analizy', icon: BarChart3, href: '/analytics' },
+  { name: 'Rodzina', icon: Users, href: '/members' },
+  { name: 'Raporty', icon: FileText, href: '/reports' },
+  { name: 'Ustawienia', icon: Settings, href: '/settings' },
+]
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(false)
+  const pathname = usePathname()
 
   return (
-    <aside className={`bg-white border-r border-gray-200 transition-all duration-300 ${
+    <div className={`bg-white shadow-sm border-r border-gray-200 transition-all duration-300 ${
       collapsed ? 'w-16' : 'w-64'
     }`}>
       <div className="flex flex-col h-full">
-        {/* Toggle Button */}
+        {/* Toggle button */}
         <div className="flex justify-end p-4">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
         </div>
 
-        {/* Navigation */}
+        {/* Menu items */}
         <nav className="flex-1 px-4">
           <ul className="space-y-2">
-            {menuItems.map((item) => (
-              <li key={item.href}>
-                <a
-                  href={item.href}
-                  className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors group"
-                >
-                  <item.icon className="h-5 w-5" />
-                  {!collapsed && <span className="font-medium">{item.label}</span>}
-                </a>
-              </li>
-            ))}
+            {menuItems.map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    {!collapsed && <span className="font-medium">{item.name}</span>}
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         </nav>
 
-        {/* Quick Actions */}
-        <div className="p-4 border-t border-gray-200">
-          <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2">
+        {/* Add Transaction button */}
+        <div className="p-4">
+          <button className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2">
             <Plus className="h-4 w-4" />
             {!collapsed && <span>Dodaj transakcję</span>}
           </button>
         </div>
       </div>
-    </aside>
-  );
+    </div>
+  )
 }
