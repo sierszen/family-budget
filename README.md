@@ -1,36 +1,147 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Family Budget - Inteligentne zarządzanie budżetem rodzinnym
 
-## Getting Started
+Nowoczesna aplikacja webowa do zarządzania budżetem rodzinnym z wykorzystaniem sztucznej inteligencji, wykresów i zaawansowanych analiz.
 
-First, run the development server:
+## 🚀 Funkcjonalności
 
+### Podstawowe funkcje
+- ✅ **Dashboard** - Przegląd budżetu z kartami statystyk
+- ✅ **Transakcje** - Dodawanie i zarządzanie przychodami/wydatkami
+- ✅ **Kategorie** - Organizacja transakcji według kategorii
+- ✅ **Członkowie rodziny** - Zarządzanie użytkownikami w rodzinie
+- ✅ **Wykresy** - Wizualizacja wydatków i trendów
+- ✅ **Limity miesięczne** - Ustawianie i monitorowanie limitów
+- ✅ **Alerty** - Powiadomienia o przekroczeniu limitów
+
+### AI Funkcjonalności
+- 🤖 **AI Analiza** - Automatyczne analizy wydatków
+- 💡 **Inteligentne podpowiedzi** - Sposoby oszczędzania
+- 📊 **Predykcje** - Prognozy przyszłych wydatków
+- 🎯 **Rekomendacje** - Personalizowane wskazówki
+
+### Design i UX
+- 🎨 **Nowoczesny design** - Gradient backgrounds, glassmorphism
+- 📱 **Responsywny** - Działa na wszystkich urządzeniach
+- ⚡ **Szybki** - Zoptymalizowana wydajność
+- 🌙 **Dark mode ready** - Przygotowany na tryb ciemny
+
+## 🛠️ Technologie
+
+### Frontend
+- **Next.js 14** - React framework z App Router
+- **TypeScript** - Typowanie statyczne
+- **Tailwind CSS** - Utility-first CSS framework
+- **Recharts** - Biblioteka wykresów
+- **Lucide React** - Ikony
+- **Framer Motion** - Animacje
+
+### Backend (planowany)
+- **Next.js API Routes** - Backend w tym samym projekcie
+- **Prisma** - ORM do bazy danych
+- **PostgreSQL** - Baza danych
+- **NextAuth.js** - Autoryzacja
+
+### AI & Analytics
+- **OpenAI API** - Analizy i podpowiedzi
+- **Vercel Analytics** - Monitoring
+
+## 🚀 Uruchomienie
+
+### Wymagania
+- Node.js >= 18.18.0
+- npm lub yarn
+
+### Instalacja
+
+1. **Sklonuj repozytorium**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd family-budget
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Zainstaluj zależności**
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Uruchom serwer deweloperski**
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. **Otwórz w przeglądarce**
+```
+http://localhost:3000
+```
 
-## Learn More
+## 📁 Struktura projektu
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/                 # Next.js App Router
+│   ├── layout.tsx      # Główny layout
+│   ├── page.tsx        # Strona główna
+│   └── globals.css     # Globalne style
+├── components/         # Komponenty React
+│   ├── Header.tsx      # Nagłówek aplikacji
+│   ├── Sidebar.tsx     # Boczne menu
+│   ├── Dashboard.tsx   # Główny dashboard
+│   ├── BudgetCard.tsx  # Karty statystyk
+│   ├── ExpenseChart.tsx # Wykresy wydatków
+│   ├── RecentTransactions.tsx # Ostatnie transakcje
+│   └── AIInsights.tsx  # Podpowiedzi AI
+├── lib/               # Funkcje pomocnicze
+├── types/             # Definicje TypeScript
+└── styles/            # Dodatkowe style
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎯 Plan rozwoju
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Faza 1 - Podstawowa funkcjonalność ✅
+- [x] Dashboard z statystykami
+- [x] Wykresy wydatków
+- [x] Lista transakcji
+- [x] Podpowiedzi AI (mock)
 
-## Deploy on Vercel
+### Faza 2 - Backend i baza danych
+- [ ] Konfiguracja Prisma
+- [ ] Modele bazy danych
+- [ ] API endpoints
+- [ ] Autoryzacja
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Faza 3 - AI Integracja
+- [ ] OpenAI API integration
+- [ ] Analizy wydatków
+- [ ] Predykcje
+- [ ] Personalizowane rekomendacje
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Faza 4 - Zaawansowane funkcje
+- [ ] Limity miesięczne
+- [ ] Alerty i powiadomienia
+- [ ] Eksport danych
+- [ ] Backup i synchronizacja
+
+### Faza 5 - Deployment
+- [ ] Konfiguracja Vercel
+- [ ] Baza danych w chmurze
+- [ ] Monitoring i analytics
+- [ ] CI/CD pipeline
+
+## 🤝 Współpraca
+
+1. Fork projektu
+2. Stwórz branch dla nowej funkcjonalności (`git checkout -b feature/AmazingFeature`)
+3. Commit zmian (`git commit -m 'Add some AmazingFeature'`)
+4. Push do brancha (`git push origin feature/AmazingFeature`)
+5. Otwórz Pull Request
+
+## 📄 Licencja
+
+Ten projekt jest dostępny na licencji MIT. Zobacz plik `LICENSE` dla szczegółów.
+
+## 🙏 Podziękowania
+
+- [Next.js](https://nextjs.org/) - Za wspaniały framework
+- [Tailwind CSS](https://tailwindcss.com/) - Za utility-first CSS
+- [Recharts](https://recharts.org/) - Za bibliotekę wykresów
+- [OpenAI](https://openai.com/) - Za API AI
