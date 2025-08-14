@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  avatar        String?
+  role          UserRole  @default(MEMBER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relacje
+  familyId      String?
+  family        Family?   @relation(fields: [familyId], references: [id])
+  transactions  Transaction[]
+  budgetLimits  BudgetLimit[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Family {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relacje
+  members     User[]
+  transactions Transaction[]
+  budgetLimits BudgetLimit[]
+  categories  Category[]
+
+  @@map("families")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  icon        String
+  color       String
+  type        TransactionType
+  familyId    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relacje
+  family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("categories")
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  title       String
+  amount      Decimal         @db.Decimal(10, 2)
+  type        TransactionType
+  categoryId  String
+  userId      String
+  familyId    String
+  description String?
+  date        DateTime
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relacje
+  category    Category        @relation(fields: [categoryId], references: [id])
+  user        User            @relation(fields: [userId], references: [id])
+  family      Family          @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
+
+model BudgetLimit {
+  id          String    @id @default(cuid())
+  categoryId  String
+  userId      String
+  familyId    String
+  amount      Decimal   @db.Decimal(10, 2)
+  period      Period    @default(MONTHLY)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relacje
+  user        User      @relation(fields: [userId], references: [id])
+  family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@map("budget_limits")
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  type        NotificationType
+  title       String
+  message     String
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  // Relacje
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum Period {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum NotificationType {
+  BUDGET_LIMIT
+  TRANSACTION
+  SYSTEM
+  REMINDER
+}

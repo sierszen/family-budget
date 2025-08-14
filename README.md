@@ -1,147 +1,203 @@
-# Family Budget - Inteligentne zarządzanie budżetem rodzinnym
+# 🏠 Family Budget - Inteligentne zarządzanie budżetem rodzinnym
 
-Nowoczesna aplikacja webowa do zarządzania budżetem rodzinnym z wykorzystaniem sztucznej inteligencji, wykresów i zaawansowanych analiz.
+Nowoczesna aplikacja webowa do zarządzania budżetem rodzinnym z integracją AI, automatycznymi analizami i inteligentnymi podpowiedziami.
 
 ## 🚀 Funkcjonalności
 
-### Podstawowe funkcje
-- ✅ **Dashboard** - Przegląd budżetu z kartami statystyk
-- ✅ **Transakcje** - Dodawanie i zarządzanie przychodami/wydatkami
-- ✅ **Kategorie** - Organizacja transakcji według kategorii
-- ✅ **Członkowie rodziny** - Zarządzanie użytkownikami w rodzinie
-- ✅ **Wykresy** - Wizualizacja wydatków i trendów
-- ✅ **Limity miesięczne** - Ustawianie i monitorowanie limitów
-- ✅ **Alerty** - Powiadomienia o przekroczeniu limitów
+### Podstawowe
+- ✅ **Zarządzanie użytkownikami** - Podział na członków rodziny
+- ✅ **Transakcje** - Dodawanie przychodów i wydatków z kategoriami
+- ✅ **Analizy** - Wykresy i raporty finansowe
+- ✅ **Limity budżetowe** - Ustawianie i monitorowanie limitów
+- ✅ **Historia transakcji** - Pełna historia z filtrowaniem
 
-### AI Funkcjonalności
-- 🤖 **AI Analiza** - Automatyczne analizy wydatków
-- 💡 **Inteligentne podpowiedzi** - Sposoby oszczędzania
-- 📊 **Predykcje** - Prognozy przyszłych wydatków
-- 🎯 **Rekomendacje** - Personalizowane wskazówki
+### AI i Automatyzacja
+- 🤖 **OpenAI Integration** - Inteligentne podpowiedzi finansowe
+- 📊 **Predykcje wydatków** - Analiza trendów i prognozy
+- 🎯 **Personalizowane rekomendacje** - Dostosowane do stylu życia
+- ⚠️ **Automatyczne alerty** - Powiadomienia o przekroczeniu limitów
 
-### Design i UX
-- 🎨 **Nowoczesny design** - Gradient backgrounds, glassmorphism
-- 📱 **Responsywny** - Działa na wszystkich urządzeniach
-- ⚡ **Szybki** - Zoptymalizowana wydajność
-- 🌙 **Dark mode ready** - Przygotowany na tryb ciemny
+### Bezpieczeństwo i Autoryzacja
+- 🔐 **NextAuth.js** - Bezpieczna autoryzacja przez Google
+- 👥 **Zarządzanie rodziną** - Kontrola dostępu i uprawnień
+- 🔒 **Szyfrowanie danych** - Bezpieczne przechowywanie informacji
+
+### Powiadomienia
+- 📧 **Email notifications** - Raporty tygodniowe i alerty
+- 🔔 **Push notifications** - Natychmiastowe powiadomienia
+- 📊 **Automatyczne raporty** - Tygodniowe podsumowania
 
 ## 🛠️ Technologie
 
 ### Frontend
-- **Next.js 14** - React framework z App Router
+- **Next.js 15** - React framework z App Router
 - **TypeScript** - Typowanie statyczne
-- **Tailwind CSS** - Utility-first CSS framework
-- **Recharts** - Biblioteka wykresów
-- **Lucide React** - Ikony
+- **Tailwind CSS** - Stylowanie utility-first
+- **Shadcn/ui** - Komponenty UI
+- **Recharts** - Wykresy i wizualizacje
 - **Framer Motion** - Animacje
+- **Lucide React** - Ikony
 
-### Backend (planowany)
-- **Next.js API Routes** - Backend w tym samym projekcie
-- **Prisma** - ORM do bazy danych
-- **PostgreSQL** - Baza danych
-- **NextAuth.js** - Autoryzacja
+### Backend
+- **Next.js API Routes** - Serverless API
+- **Prisma** - ORM dla bazy danych
+- **PostgreSQL** - Baza danych (Supabase/Neon)
+- **NextAuth.js** - Autoryzacja i sesje
 
-### AI & Analytics
-- **OpenAI API** - Analizy i podpowiedzi
-- **Vercel Analytics** - Monitoring
+### AI i Analytics
+- **OpenAI API** - Inteligentne podpowiedzi
+- **Vercel Analytics** - Monitoring wydajności
+
+### Deployment
+- **Vercel** - Hosting i deployment
+- **Supabase/Neon** - Cloud database
 
 ## 🚀 Uruchomienie
 
-### Wymagania
-- Node.js >= 18.18.0
-- npm lub yarn
-
-### Instalacja
-
-1. **Sklonuj repozytorium**
+### 1. Klonowanie i instalacja
 ```bash
-git clone <repository-url>
+git clone https://github.com/your-username/family-budget.git
 cd family-budget
-```
-
-2. **Zainstaluj zależności**
-```bash
 npm install
 ```
 
-3. **Uruchom serwer deweloperski**
+### 2. Konfiguracja bazy danych
+
+#### Opcja A: Supabase (Zalecane)
+1. Utwórz konto na [supabase.com](https://supabase.com)
+2. Utwórz nowy projekt
+3. Skopiuj connection string z Settings > Database
+4. Dodaj do `.env`:
+```env
+DATABASE_URL="postgresql://postgres:[password]@db.[project].supabase.co:5432/postgres"
+```
+
+#### Opcja B: Neon
+1. Utwórz konto na [neon.tech](https://neon.tech)
+2. Utwórz nowy projekt
+3. Skopiuj connection string
+4. Dodaj do `.env`
+
+### 3. Konfiguracja autoryzacji (Google OAuth)
+1. Idź do [Google Cloud Console](https://console.cloud.google.com)
+2. Utwórz nowy projekt
+3. Włącz Google+ API
+4. Utwórz OAuth 2.0 credentials
+5. Dodaj do `.env`:
+```env
+GOOGLE_CLIENT_ID="your-client-id"
+GOOGLE_CLIENT_SECRET="your-client-secret"
+```
+
+### 4. Konfiguracja OpenAI
+1. Utwórz konto na [openai.com](https://openai.com)
+2. Wygeneruj API key
+3. Dodaj do `.env`:
+```env
+OPENAI_API_KEY="your-openai-api-key"
+```
+
+### 5. Konfiguracja email (Resend)
+1. Utwórz konto na [resend.com](https://resend.com)
+2. Wygeneruj API key
+3. Dodaj do `.env`:
+```env
+RESEND_API_KEY="your-resend-api-key"
+```
+
+### 6. Zmienne środowiskowe
+Skopiuj `env.example` do `.env` i wypełnij wszystkie wartości:
+```bash
+cp env.example .env
+```
+
+### 7. Migracja bazy danych
+```bash
+npx prisma generate
+npx prisma db push
+```
+
+### 8. Uruchomienie aplikacji
 ```bash
 npm run dev
 ```
 
-4. **Otwórz w przeglądarce**
-```
-http://localhost:3000
-```
+Aplikacja będzie dostępna pod adresem: http://localhost:3000
 
 ## 📁 Struktura projektu
 
 ```
 src/
-├── app/                 # Next.js App Router
-│   ├── layout.tsx      # Główny layout
-│   ├── page.tsx        # Strona główna
-│   └── globals.css     # Globalne style
-├── components/         # Komponenty React
-│   ├── Header.tsx      # Nagłówek aplikacji
-│   ├── Sidebar.tsx     # Boczne menu
-│   ├── Dashboard.tsx   # Główny dashboard
-│   ├── BudgetCard.tsx  # Karty statystyk
-│   ├── ExpenseChart.tsx # Wykresy wydatków
-│   ├── RecentTransactions.tsx # Ostatnie transakcje
-│   └── AIInsights.tsx  # Podpowiedzi AI
-├── lib/               # Funkcje pomocnicze
-├── types/             # Definicje TypeScript
-└── styles/            # Dodatkowe style
+├── app/                    # Next.js App Router
+│   ├── api/               # API endpoints
+│   │   ├── auth/          # NextAuth.js routes
+│   │   ├── transactions/  # Transakcje API
+│   │   └── insights/      # AI insights API
+│   ├── analytics/         # Strona analiz
+│   ├── members/           # Zarządzanie członkami
+│   ├── reports/           # Raporty
+│   ├── settings/          # Ustawienia
+│   └── transactions/      # Transakcje
+├── components/            # Komponenty React
+│   ├── ui/               # Komponenty UI
+│   ├── charts/           # Komponenty wykresów
+│   └── forms/            # Formularze
+├── lib/                  # Biblioteki i konfiguracje
+│   ├── prisma.ts         # Prisma client
+│   ├── openai.ts         # OpenAI integration
+│   └── notifications.ts  # System powiadomień
+└── types/                # Definicje TypeScript
 ```
 
 ## 🎯 Plan rozwoju
 
-### Faza 1 - Podstawowa funkcjonalność ✅
-- [x] Dashboard z statystykami
-- [x] Wykresy wydatków
-- [x] Lista transakcji
-- [x] Podpowiedzi AI (mock)
+### Faza 1: Podstawy ✅
+- [x] Setup projektu Next.js
+- [x] Podstawowe komponenty UI
+- [x] Routing i nawigacja
+- [x] Mock data i layout
 
-### Faza 2 - Backend i baza danych
-- [ ] Konfiguracja Prisma
-- [ ] Modele bazy danych
-- [ ] API endpoints
-- [ ] Autoryzacja
+### Faza 2: Backend i baza danych ✅
+- [x] Konfiguracja Prisma
+- [x] Modele bazy danych
+- [x] API endpoints
+- [x] Autoryzacja NextAuth.js
 
-### Faza 3 - AI Integracja
-- [ ] OpenAI API integration
-- [ ] Analizy wydatków
-- [ ] Predykcje
-- [ ] Personalizowane rekomendacje
+### Faza 3: AI i Analytics ✅
+- [x] Integracja OpenAI
+- [x] Generowanie insights
+- [x] Predykcje wydatków
+- [x] Inteligentne podpowiedzi
 
-### Faza 4 - Zaawansowane funkcje
-- [ ] Limity miesięczne
-- [ ] Alerty i powiadomienia
-- [ ] Eksport danych
-- [ ] Backup i synchronizacja
+### Faza 4: Powiadomienia ✅
+- [x] System email (Resend)
+- [x] Powiadomienia w aplikacji
+- [x] Automatyczne raporty
+- [x] Alerty budżetowe
 
-### Faza 5 - Deployment
-- [ ] Konfiguracja Vercel
-- [ ] Baza danych w chmurze
-- [ ] Monitoring i analytics
-- [ ] CI/CD pipeline
+### Faza 5: Zaawansowane funkcje 🚧
+- [ ] Import/export danych
+- [ ] Zaawansowane wykresy
+- [ ] Integracja z bankami
+- [ ] Mobile app (React Native)
 
 ## 🤝 Współpraca
 
-1. Fork projektu
-2. Stwórz branch dla nowej funkcjonalności (`git checkout -b feature/AmazingFeature`)
-3. Commit zmian (`git commit -m 'Add some AmazingFeature'`)
-4. Push do brancha (`git push origin feature/AmazingFeature`)
-5. Otwórz Pull Request
+1. **Fork** projektu
+2. Utwórz **feature branch** (`git checkout -b feature/AmazingFeature`)
+3. **Commit** zmian (`git commit -m 'Add some AmazingFeature'`)
+4. **Push** do branch (`git push origin feature/AmazingFeature`)
+5. Otwórz **Pull Request**
 
 ## 📄 Licencja
 
-Ten projekt jest dostępny na licencji MIT. Zobacz plik `LICENSE` dla szczegółów.
+Ten projekt jest licencjonowany pod MIT License - zobacz plik [LICENSE](LICENSE) dla szczegółów.
 
 ## 🙏 Podziękowania
 
-- [Next.js](https://nextjs.org/) - Za wspaniały framework
-- [Tailwind CSS](https://tailwindcss.com/) - Za utility-first CSS
-- [Recharts](https://recharts.org/) - Za bibliotekę wykresów
-- [OpenAI](https://openai.com/) - Za API AI
+- [Next.js](https://nextjs.org/) - Framework React
+- [Prisma](https://prisma.io/) - ORM
+- [OpenAI](https://openai.com/) - AI API
+- [Vercel](https://vercel.com/) - Deployment
+- [Supabase](https://supabase.com/) - Database
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
