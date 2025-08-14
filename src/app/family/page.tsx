@@ -308,7 +308,7 @@ export default function FamilyPage() {
               <h3 className="text-lg font-semibold text-gray-900">Usuń rodzinę</h3>
             </div>
             <p className="text-gray-600 mb-6">
-              Czy na pewno chcesz usunąć rodzinę "{family.name}"? Ta operacja jest nieodwracalna i usunie wszystkie dane.
+              Czy na pewno chcesz usunąć rodzinę &quot;{family.name}&quot;? Ta operacja jest nieodwracalna i usunie wszystkie dane.
             </p>
             <div className="flex space-x-3">
               <button

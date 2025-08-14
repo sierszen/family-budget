@@ -2,7 +2,7 @@ import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
-import { verifyPassword, validateEmail, validatePassword, hashPassword } from "@/lib/auth"
+import { verifyPassword } from "@/lib/auth"
 
 const handler = NextAuth({
   providers: [
@@ -51,13 +51,13 @@ const handler = NextAuth({
       }
       return session
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.sub = user.id
       }
       return token
     },
-    async signIn({ user, account, profile }) {
+    async signIn({ user }) {
       try {
         // Sprawdź czy użytkownik istnieje
         let dbUser = await prisma.user.findUnique({
