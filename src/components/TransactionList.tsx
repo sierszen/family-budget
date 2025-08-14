@@ -119,7 +119,7 @@ export function TransactionList({ searchTerm, category }: TransactionListProps) 
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">Brak transakcji</h3>
         <p className="text-gray-500">
-          {searchTerm || category !== 'all' 
+          {searchTerm || category !== 'all'
             ? 'Nie znaleziono transakcji spełniających kryteria wyszukiwania.'
             : 'Dodaj pierwszą transakcję, aby rozpocząć śledzenie wydatków.'
           }
@@ -133,7 +133,7 @@ export function TransactionList({ searchTerm, category }: TransactionListProps) 
       {filteredTransactions.map((transaction) => {
         const amount = Number(transaction.amount)
         const isIncome = transaction.type === 'INCOME'
-        
+
         return (
           <div key={transaction.id} className="p-6 hover:bg-gray-50 transition-colors">
             <div className="flex items-center justify-between">
@@ -160,7 +160,7 @@ export function TransactionList({ searchTerm, category }: TransactionListProps) 
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <span className={`font-semibold text-lg ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
                   {isIncome ? '+' : '-'}{Math.abs(amount).toFixed(2)} zł

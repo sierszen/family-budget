@@ -27,13 +27,13 @@ export function AIInsights() {
     try {
       setLoading(true)
       const response = await fetch('/api/insights')
-      
+
       if (!response.ok) {
         throw new Error('Błąd podczas pobierania podpowiedzi AI')
       }
-      
+
       const data = await response.json()
-      
+
       if (data.insights && Array.isArray(data.insights)) {
         setInsights(data.insights)
       } else {

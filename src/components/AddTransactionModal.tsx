@@ -1,107 +1,143 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { X, Save, Calendar } from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { X, Plus, Minus } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 
 interface AddTransactionModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }
 
-const categories = [
-  { id: 'food', name: 'Jedzenie', type: 'expense' },
-  { id: 'transport', name: 'Transport', type: 'expense' },
-  { id: 'housing', name: 'Mieszkanie', type: 'expense' },
-  { id: 'entertainment', name: 'Rozrywka', type: 'expense' },
-  { id: 'health', name: 'Zdrowie', type: 'expense' },
-  { id: 'income', name: 'Przychód', type: 'income' },
-  { id: 'other', name: 'Inne', type: 'expense' },
-];
-
-const familyMembers = [
-  { id: 'mama', name: 'Mama' },
-  { id: 'tata', name: 'Tata' },
-  { id: 'dziecko1', name: 'Janek' },
-  { id: 'dziecko2', name: 'Ania' },
-];
+interface Category {
+  id: string
+  name: string
+  icon: string
+  color: string
+  type: 'INCOME' | 'EXPENSE'
+}
 
 export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProps) {
+  const { data: session } = useSession()
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     amount: '',
-    type: 'expense',
-    category: '',
+    type: 'EXPENSE' as 'INCOME' | 'EXPENSE',
+    categoryId: '',
     description: '',
-    date: new Date().toISOString().split('T')[0],
-    user: '',
-  });
+    date: new Date().toISOString().split('T')[0]
+  })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Tutaj będzie logika dodawania transakcji
-    console.log('Dodawanie transakcji:', formData);
-    onClose();
-    setFormData({
-      title: '',
-      amount: '',
-      type: 'expense',
-      category: '',
-      description: '',
-      date: new Date().toISOString().split('T')[0],
-      user: '',
-    });
-  };
+  useEffect(() => {
+    if (isOpen && session) {
+      fetchCategories()
+    }
+  }, [isOpen, session])
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories')
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data.categories || [])
+      }
+    } catch (error) {
+      console.error('Błąd pobierania kategorii:', error)
+    }
+  }
 
-  if (!isOpen) return null;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const response = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...formData,
+          amount: parseFloat(formData.amount)
+        })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Błąd podczas dodawania transakcji')
+      }
+
+      // Reset form
+      setFormData({
+        title: '',
+        amount: '',
+        type: 'EXPENSE',
+        categoryId: '',
+        description: '',
+        date: new Date().toISOString().split('T')[0]
+      })
+
+      onClose()
+      // Odśwież stronę
+      window.location.reload()
+    } catch (error) {
+      console.error('Błąd dodawania transakcji:', error)
+      alert(error instanceof Error ? error.message : 'Błąd podczas dodawania transakcji')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredCategories = categories.filter(cat => cat.type === formData.type)
+
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Dodaj transakcję</h2>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Transaction Type */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Type Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Typ transakcji
             </label>
-            <div className="flex space-x-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="type"
-                  value="expense"
-                  checked={formData.type === 'expense'}
-                  onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="mr-2"
-                />
-                <span className="text-sm">Wydatek</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="type"
-                  value="income"
-                  checked={formData.type === 'income'}
-                  onChange={(e) => handleInputChange('type', e.target.value)}
-                  className="mr-2"
-                />
-                <span className="text-sm">Przychód</span>
-              </label>
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, type: 'EXPENSE', categoryId: '' })}
+                className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg border transition-colors ${
+                  formData.type === 'EXPENSE'
+                    ? 'border-red-500 bg-red-50 text-red-700'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Minus className="h-4 w-4" />
+                <span>Wydatek</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, type: 'INCOME', categoryId: '' })}
+                className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg border transition-colors ${
+                  formData.type === 'INCOME'
+                    ? 'border-green-500 bg-green-50 text-green-700'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Przychód</span>
+              </button>
             </div>
           </div>
 
@@ -113,8 +149,8 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="np. Zakupy spożywcze"
               required
             />
@@ -128,9 +164,10 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
             <input
               type="number"
               step="0.01"
+              min="0"
               value={formData.amount}
-              onChange={(e) => handleInputChange('amount', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="0.00"
               required
             />
@@ -142,19 +179,17 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
               Kategoria
             </label>
             <select
-              value={formData.category}
-              onChange={(e) => handleInputChange('category', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={formData.categoryId}
+              onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
               <option value="">Wybierz kategorię</option>
-              {categories
-                .filter(cat => cat.type === formData.type)
-                .map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
+              {filteredCategories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.icon} {category.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -163,71 +198,48 @@ export function AddTransactionModal({ isOpen, onClose }: AddTransactionModalProp
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Data
             </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => handleInputChange('date', e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-          </div>
-
-          {/* User */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Użytkownik
-            </label>
-            <select
-              value={formData.user}
-              onChange={(e) => handleInputChange('user', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
-            >
-              <option value="">Wybierz użytkownika</option>
-              {familyMembers.map(member => (
-                <option key={member.id} value={member.id}>
-                  {member.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Opis (opcjonalnie)
+              Opis (opcjonalny)
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Dodatkowe informacje o transakcji..."
             />
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-4">
+          {/* Buttons */}
+          <div className="flex space-x-3 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Anuluj
             </button>
             <button
               type="submit"
-              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+              disabled={loading}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save className="h-4 w-4" />
-              <span>Zapisz</span>
+              {loading ? 'Dodawanie...' : 'Dodaj transakcję'}
             </button>
           </div>
         </form>
       </div>
     </div>
-  );
+  )
 }

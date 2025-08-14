@@ -5,10 +5,35 @@ import { TrendingUp, TrendingDown, Calendar, Filter } from 'lucide-react';
 import { AnalyticsChart } from '@/components/AnalyticsChart';
 import { SpendingTrends } from '@/components/SpendingTrends';
 import { CategoryComparison } from '@/components/CategoryComparison';
+import { useStats } from '@/hooks/useStats';
+import { useTransactions } from '@/hooks/useTransactions';
 
 export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedChart, setSelectedChart] = useState('trends');
+  const { stats, loading: statsLoading } = useStats();
+  const { transactions, loading: transactionsLoading } = useTransactions();
+
+  const loading = statsLoading || transactionsLoading;
+
+  // Oblicz statystyki
+  const averageDailyExpenses = transactions.length > 0 
+    ? (stats.expenses / 30).toFixed(0) 
+    : '0';
+  
+  const totalTransactions = transactions.length;
+  
+  const topCategory = transactions.length > 0 
+    ? transactions.reduce((acc, transaction) => {
+        const category = transaction.category.name;
+        acc[category] = (acc[category] || 0) + Number(transaction.amount);
+        return acc;
+      }, {} as Record<string, number>)
+    : {};
+
+  const topCategoryName = Object.keys(topCategory).length > 0
+    ? Object.entries(topCategory).sort(([,a], [,b]) => b - a)[0][0]
+    : 'Brak danych';
 
   return (
     <div className="space-y-6">
@@ -42,7 +67,9 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Średnie wydatki dzienne</p>
-              <p className="text-2xl font-bold text-gray-900">208 zł</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {loading ? 'Ładowanie...' : `${averageDailyExpenses} zł`}
+              </p>
               <p className="text-sm text-green-600 flex items-center mt-1">
                 <TrendingDown className="h-4 w-4 mr-1" />
                 -12% vs poprzedni miesiąc
@@ -58,7 +85,9 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Największa kategoria</p>
-              <p className="text-2xl font-bold text-gray-900">Mieszkanie</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {loading ? 'Ładowanie...' : topCategoryName}
+              </p>
               <p className="text-sm text-gray-600 mt-1">30% wszystkich wydatków</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -71,7 +100,9 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Oszczędności</p>
-              <p className="text-2xl font-bold text-gray-900">2,180 zł</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {loading ? 'Ładowanie...' : `${stats.savings.toFixed(0)} zł`}
+              </p>
               <p className="text-sm text-green-600 flex items-center mt-1">
                 <TrendingUp className="h-4 w-4 mr-1" />
                 +15% vs poprzedni miesiąc
@@ -87,7 +118,9 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Liczba transakcji</p>
-              <p className="text-2xl font-bold text-gray-900">127</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {loading ? 'Ładowanie...' : totalTransactions}
+              </p>
               <p className="text-sm text-gray-600 mt-1">W tym miesiącu</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-lg">
@@ -149,21 +182,21 @@ export default function AnalyticsPage() {
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <h4 className="font-medium text-blue-900 mb-2">Trend oszczędności</h4>
               <p className="text-sm text-blue-700">
-                Twoje oszczędności rosną o 15% miesięcznie. To świetny wynik!
+                {loading ? 'Ładowanie...' : `Twoje oszczędności wynoszą ${stats.savings.toFixed(0)} zł. ${stats.savings > 0 ? 'To świetny wynik!' : 'Rozważ ograniczenie wydatków.'}`}
               </p>
             </div>
 
             <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
-              <h4 className="font-medium text-orange-900 mb-2">Uwaga: Wydatki na rozrywkę</h4>
+              <h4 className="font-medium text-orange-900 mb-2">Uwaga: Wydatki</h4>
               <p className="text-sm text-orange-700">
-                Wydatki na rozrywkę są o 20% wyższe niż średnia. Rozważ ograniczenie.
+                {loading ? 'Ładowanie...' : `Wydatki wynoszą ${stats.expenses.toFixed(0)} zł. ${stats.expenses > stats.income * 0.8 ? 'Rozważ ograniczenie wydatków.' : 'Wydatki są w normie.'}`}
               </p>
             </div>
 
             <div className="p-4 bg-green-50 rounded-lg border border-green-200">
               <h4 className="font-medium text-green-900 mb-2">Pozytywny trend</h4>
               <p className="text-sm text-green-700">
-                Wydatki na transport spadły o 25% dzięki carpoolingowi.
+                {loading ? 'Ładowanie...' : `Przychody wynoszą ${stats.income.toFixed(0)} zł. ${stats.income > 0 ? 'Dobra kontrola finansów!' : 'Dodaj pierwsze przychody.'}`}
               </p>
             </div>
           </div>
@@ -176,53 +209,66 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h4 className="font-medium text-gray-900 mb-3">Top 5 kategorii wydatków</h4>
-            <div className="space-y-3">
-              {[
-                { name: 'Mieszkanie', amount: 1800, percentage: 30 },
-                { name: 'Jedzenie', amount: 1200, percentage: 20 },
-                { name: 'Transport', amount: 800, percentage: 13 },
-                { name: 'Rozrywka', amount: 600, percentage: 10 },
-                { name: 'Zdrowie', amount: 400, percentage: 7 },
-              ].map((category, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{category.name}</span>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-20 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{ width: `${category.percentage}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">
-                      {category.amount} zł
-                    </span>
+            {loading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {Object.entries(topCategory)
+                  .sort(([,a], [,b]) => b - a)
+                  .slice(0, 5)
+                  .map(([name, amount], index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">{name}</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-20 bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
+                            style={{ width: `${(amount / stats.expenses) * 100}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {amount.toFixed(0)} zł
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
 
           <div>
-            <h4 className="font-medium text-gray-900 mb-3">Trendy miesięczne</h4>
+            <h4 className="font-medium text-gray-900 mb-3">Podsumowanie</h4>
             <div className="space-y-3">
-              {[
-                { month: 'Styczeń', income: 8000, expenses: 6200, savings: 1800 },
-                { month: 'Luty', income: 8200, expenses: 6100, savings: 2100 },
-                { month: 'Marzec', income: 8100, expenses: 5900, savings: 2200 },
-              ].map((data, index) => (
-                <div key={index} className="border-b border-gray-100 pb-3">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium text-gray-900">{data.month}</span>
-                    <span className="text-sm text-green-600 font-medium">
-                      +{data.savings} zł
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Przychody: {data.income} zł</span>
-                    <span>Wydatki: {data.expenses} zł</span>
-                  </div>
+              <div className="border-b border-gray-100 pb-3">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-medium text-gray-900">Przychody</span>
+                  <span className="text-sm text-green-600 font-medium">
+                    {loading ? 'Ładowanie...' : `${stats.income.toFixed(0)} zł`}
+                  </span>
                 </div>
-              ))}
+              </div>
+              <div className="border-b border-gray-100 pb-3">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-medium text-gray-900">Wydatki</span>
+                  <span className="text-sm text-red-600 font-medium">
+                    {loading ? 'Ładowanie...' : `${stats.expenses.toFixed(0)} zł`}
+                  </span>
+                </div>
+              </div>
+              <div className="border-b border-gray-100 pb-3">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-medium text-gray-900">Oszczędności</span>
+                  <span className={`text-sm font-medium ${stats.savings >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {loading ? 'Ładowanie...' : `${stats.savings >= 0 ? '+' : ''}${stats.savings.toFixed(0)} zł`}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
