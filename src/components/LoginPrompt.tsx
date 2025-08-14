@@ -31,17 +31,22 @@ export function LoginPrompt() {
     try {
       if (isLogin) {
         // Logowanie
+        console.log('Próba logowania...')
         const result = await signIn('credentials', {
           email: formData.email,
           password: formData.password,
           redirect: false
         })
 
+        console.log('Wynik logowania:', result)
+
         if (result?.error) {
           setError('Nieprawidłowy email lub hasło')
         }
       } else {
         // Rejestracja
+        console.log('Próba rejestracji...', { email: formData.email, name: formData.name })
+        
         const response = await fetch('/api/auth/register', {
           method: 'POST',
           headers: {
@@ -50,12 +55,20 @@ export function LoginPrompt() {
           body: JSON.stringify(formData)
         })
 
+        console.log('Status odpowiedzi:', response.status)
+        
         const data = await response.json()
+        console.log('Odpowiedź serwera:', data)
 
         if (!response.ok) {
-          setError(data.error || 'Błąd podczas rejestracji')
+          if (data.details) {
+            setError(`${data.error}: ${Array.isArray(data.details) ? data.details.join(', ') : data.details}`)
+          } else {
+            setError(data.error || 'Błąd podczas rejestracji')
+          }
         } else {
           // Po udanej rejestracji, zaloguj użytkownika
+          console.log('Rejestracja udana, loguję użytkownika...')
           const result = await signIn('credentials', {
             email: formData.email,
             password: formData.password,
@@ -68,6 +81,7 @@ export function LoginPrompt() {
         }
       }
     } catch (error) {
+      console.error('Błąd w handleSubmit:', error)
       setError('Wystąpił błąd. Spróbuj ponownie.')
     } finally {
       setLoading(false)
@@ -219,14 +233,14 @@ export function LoginPrompt() {
             </div>
             <span className="text-gray-700">Bezpieczna autoryzacja</span>
           </div>
-          
+
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
               <Zap className="h-4 w-4 text-green-600" />
             </div>
             <span className="text-gray-700">AI-powered podpowiedzi finansowe</span>
           </div>
-          
+
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
               <Users className="h-4 w-4 text-purple-600" />
