@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 // PUT - zaktualizuj transakcję
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession()
@@ -15,6 +15,7 @@ export async function PUT(
     }
 
     const { title, amount, type, categoryId, description, date } = await request.json()
+    const { id } = await params
 
     // Sprawdź czy transakcja należy do użytkownika
     const existingTransaction = await prisma.transaction.findUnique({
@@ -47,7 +48,7 @@ export async function PUT(
     }
 
     const updatedTransaction = await prisma.transaction.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         title: title || existingTransaction.title,
         amount: amount !== undefined ? amount : existingTransaction.amount,
@@ -79,7 +80,7 @@ export async function PUT(
 // DELETE - usuń transakcję
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession()
@@ -88,9 +89,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 })
     }
 
+    const { id } = await params
+    
     // Sprawdź czy transakcja należy do użytkownika
     const existingTransaction = await prisma.transaction.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { user: true }
     })
 
@@ -103,7 +106,7 @@ export async function DELETE(
     }
 
     await prisma.transaction.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({
