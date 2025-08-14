@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   try {
     const session = await getServerSession()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 })
     }
@@ -45,7 +45,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 })
     }
@@ -96,7 +96,7 @@ export async function PUT(request: NextRequest) {
 export async function DELETE() {
   try {
     const session = await getServerSession()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 })
     }

@@ -43,11 +43,11 @@ export default function FamilyPage() {
     try {
       setLoading(true)
       const response = await fetch('/api/family')
-      
+
       if (!response.ok) {
         throw new Error('Błąd podczas pobierania danych rodziny')
       }
-      
+
       const data = await response.json()
       setFamily(data.family)
       setUserRole(data.userRole)
@@ -270,8 +270,8 @@ export default function FamilyPage() {
                     <p className="text-sm text-gray-500">{member.email}</p>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    member.role === 'ADMIN' 
-                      ? 'bg-purple-100 text-purple-800' 
+                    member.role === 'ADMIN'
+                      ? 'bg-purple-100 text-purple-800'
                       : 'bg-blue-100 text-blue-800'
                   }`}>
                     {member.role === 'ADMIN' ? 'Administrator' : 'Członek'}

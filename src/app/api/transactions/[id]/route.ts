@@ -9,7 +9,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 })
     }
@@ -19,7 +19,7 @@ export async function PUT(
 
     // Sprawdź czy transakcja należy do użytkownika
     const existingTransaction = await prisma.transaction.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { user: true }
     })
 
@@ -84,13 +84,13 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession()
-    
+
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 })
     }
 
     const { id } = await params
-    
+
     // Sprawdź czy transakcja należy do użytkownika
     const existingTransaction = await prisma.transaction.findUnique({
       where: { id },
