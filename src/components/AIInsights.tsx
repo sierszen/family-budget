@@ -1,91 +1,161 @@
-'use client';
+'use client'
 
-import { Brain, TrendingUp, Lightbulb, Target } from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { Brain, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react'
 
-const insights = [
-  {
-    id: 1,
-    type: 'savings',
-    title: 'Oszczędności',
-    message: 'Możesz zaoszczędzić 300 zł miesięcznie ograniczając wydatki na rozrywkę o 20%.',
-    icon: TrendingUp,
-    color: 'green'
-  },
-  {
-    id: 2,
-    type: 'alert',
-    title: 'Uwaga',
-    message: 'Wydatki na jedzenie są o 15% wyższe niż średnia z ostatnich 3 miesięcy.',
-    icon: Target,
-    color: 'orange'
-  },
-  {
-    id: 3,
-    type: 'tip',
-    title: 'Wskazówka',
-    message: 'Rozważ zakup karty rabatowej do stacji benzynowej - możesz zaoszczędzić 50 zł miesięcznie.',
-    icon: Lightbulb,
-    color: 'blue'
-  }
-];
-
-const getInsightColor = (color: string) => {
-  switch (color) {
-    case 'green':
-      return 'border-green-200 bg-green-50';
-    case 'orange':
-      return 'border-orange-200 bg-orange-50';
-    case 'blue':
-      return 'border-blue-200 bg-blue-50';
-    default:
-      return 'border-gray-200 bg-gray-50';
-  }
-};
-
-const getIconColor = (color: string) => {
-  switch (color) {
-    case 'green':
-      return 'text-green-600';
-    case 'orange':
-      return 'text-orange-600';
-    case 'blue':
-      return 'text-blue-600';
-    default:
-      return 'text-gray-600';
-  }
-};
+interface Insight {
+  type: 'positive' | 'negative' | 'warning'
+  title: string
+  description: string
+  icon: React.ComponentType<any>
+}
 
 export function AIInsights() {
+  const { data: session } = useSession()
+  const [insights, setInsights] = useState<Insight[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (session) {
+      fetchInsights()
+    }
+  }, [session])
+
+  const fetchInsights = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/insights')
+      
+      if (!response.ok) {
+        throw new Error('Błąd podczas pobierania podpowiedzi AI')
+      }
+      
+      const data = await response.json()
+      
+      if (data.insights && Array.isArray(data.insights)) {
+        setInsights(data.insights)
+      } else {
+        // Fallback insights jeśli API nie zwraca danych
+        setInsights([
+          {
+            type: 'positive',
+            title: 'Dobra kontrola wydatków',
+            description: 'Twoje wydatki są w normie. Kontynuuj oszczędzanie!',
+            icon: TrendingUp
+          },
+          {
+            type: 'warning',
+            title: 'Rozważ oszczędności',
+            description: 'Możesz zaoszczędzić więcej na kategorii "Rozrywka".',
+            icon: AlertTriangle
+          }
+        ])
+      }
+    } catch (err) {
+      console.error('Błąd pobierania insights:', err)
+      setError(err instanceof Error ? err.message : 'Nieznany błąd')
+      // Fallback insights
+      setInsights([
+        {
+          type: 'positive',
+          title: 'Dobra kontrola wydatków',
+          description: 'Twoje wydatki są w normie. Kontynuuj oszczędzanie!',
+          icon: TrendingUp
+        },
+        {
+          type: 'warning',
+          title: 'Rozważ oszczędności',
+          description: 'Możesz zaoszczędzić więcej na kategorii "Rozrywka".',
+          icon: AlertTriangle
+        }
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-full"></div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-4">
+        <Brain className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+        <p className="text-sm text-gray-500">Błąd ładowania podpowiedzi AI</p>
+      </div>
+    )
+  }
+
+  if (!insights.length) {
+    return (
+      <div className="text-center py-4">
+        <Brain className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+        <p className="text-sm text-gray-500">Brak podpowiedzi AI</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-2 mb-4">
-        <Brain className="h-5 w-5 text-purple-600" />
-        <span className="text-sm font-medium text-gray-600">AI Analiza</span>
-      </div>
+      {insights.map((insight, index) => {
+        const Icon = insight.icon
+        const getIconColor = () => {
+          switch (insight.type) {
+            case 'positive':
+              return 'text-green-600'
+            case 'negative':
+              return 'text-red-600'
+            case 'warning':
+              return 'text-yellow-600'
+            default:
+              return 'text-gray-600'
+          }
+        }
 
-      {insights.map((insight) => (
-        <div key={insight.id} className={`p-4 rounded-lg border ${getInsightColor(insight.color)}`}>
-          <div className="flex items-start space-x-3">
-            <div className={`p-2 rounded-lg bg-white ${getIconColor(insight.color)}`}>
-              <insight.icon className="h-4 w-4" />
-            </div>
-            <div className="flex-1">
-              <h4 className="font-medium text-gray-900 text-sm">{insight.title}</h4>
-              <p className="text-sm text-gray-700 mt-1">{insight.message}</p>
+        const getBgColor = () => {
+          switch (insight.type) {
+            case 'positive':
+              return 'bg-green-50 border-green-200'
+            case 'negative':
+              return 'bg-red-50 border-red-200'
+            case 'warning':
+              return 'bg-yellow-50 border-yellow-200'
+            default:
+              return 'bg-gray-50 border-gray-200'
+          }
+        }
+
+        return (
+          <div
+            key={index}
+            className={`p-4 rounded-lg border ${getBgColor()} transition-colors hover:shadow-sm`}
+          >
+            <div className="flex items-start space-x-3">
+              <Icon className={`h-5 w-5 mt-0.5 ${getIconColor()}`} />
+              <div className="flex-1">
+                <h4 className="font-medium text-gray-900 text-sm mb-1">
+                  {insight.title}
+                </h4>
+                <p className="text-gray-600 text-xs leading-relaxed">
+                  {insight.description}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-
-      <div className="mt-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
-        <div className="flex items-center space-x-2 mb-2">
-          <Brain className="h-4 w-4 text-purple-600" />
-          <span className="text-sm font-medium text-purple-900">AI Rekomendacja</span>
-        </div>
-        <p className="text-sm text-purple-800">
-          Twój budżet wygląda dobrze! Rozważ utworzenie funduszu awaryjnego w wysokości 3 miesięcznych wydatków.
-        </p>
-      </div>
+        )
+      })}
     </div>
-  );
+  )
 }
