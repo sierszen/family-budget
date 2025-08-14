@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { 
-  Home, 
-  CreditCard, 
-  BarChart3, 
-  Users, 
-  FileText, 
+import {
+  Home,
+  CreditCard,
+  BarChart3,
+  Users,
+  FileText,
   Settings,
   Plus,
   ChevronLeft,
@@ -49,7 +49,7 @@ export function Sidebar() {
             {menuItems.map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href
-              
+
               return (
                 <li key={item.name}>
                   <Link

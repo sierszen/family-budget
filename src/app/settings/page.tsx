@@ -187,7 +187,7 @@ export default function SettingsPage() {
             <AlertTriangle className="h-6 w-6 text-red-500" />
             <h2 className="text-xl font-semibold text-red-900">Strefa niebezpieczna</h2>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-medium text-red-900">Usuń wszystkie dane</h3>

@@ -14,6 +14,7 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   name          String
+  password      String?   // Dodane pole dla hasła
   avatar        String?
   role          UserRole  @default(MEMBER)
   createdAt     DateTime  @default(now())
