@@ -34,12 +34,17 @@ export function useTransactions() {
     const fetchTransactions = async () => {
       try {
         setLoading(true)
-        const response = await fetch('/api/transactions')
-        
+        const response = await fetch(`/api/transactions?t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache'
+      }
+    })
+
         if (!response.ok) {
           throw new Error('Błąd podczas pobierania transakcji')
         }
-        
+
         const data = await response.json()
         setTransactions(data.transactions || [])
       } catch (err) {

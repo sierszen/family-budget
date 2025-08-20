@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { hashPassword, validateEmail, validatePassword } from '@/lib/auth'
+import { hashPassword, validateEmail, validatePassword } from '@/lib/auth-utils'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,15 +41,46 @@ export async function POST(request: NextRequest) {
 
     // Sprawdź czy użytkownik już istnieje
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
+      include: { family: true }
     })
 
     if (existingUser) {
       console.log('Użytkownik już istnieje')
-      return NextResponse.json(
-        { error: 'Użytkownik z tym emailem już istnieje' },
-        { status: 409 }
-      )
+
+      // Jeśli użytkownik ma hasło, to znaczy że się już zarejestrował
+      if (existingUser.password) {
+        return NextResponse.json(
+          { error: 'Użytkownik z tym emailem już istnieje' },
+          { status: 409 }
+        )
+      }
+
+      // Jeśli użytkownik nie ma hasła, to znaczy że został dodany bezpośrednio
+      // Zaktualizuj jego dane i dodaj hasło
+      console.log('Użytkownik został dodany bezpośrednio, aktualizuję dane...')
+
+      const hashedPassword = await hashPassword(password)
+
+      await prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          name,
+          password: hashedPassword
+        }
+      })
+
+      console.log('Użytkownik zaktualizowany pomyślnie')
+
+      return NextResponse.json({
+        message: 'Konto zostało aktywowane pomyślnie',
+        user: {
+          id: existingUser.id,
+          email: existingUser.email,
+          name: existingUser.name,
+          familyId: existingUser.familyId
+        }
+      })
     }
 
     console.log('Hashuję hasło...')

@@ -40,6 +40,8 @@ export function BudgetCard({ title, value, change, changeType, icon: Icon, color
     }
   };
 
+  const IconOrFallback: LucideIcon | null = Icon || null;
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
@@ -51,7 +53,11 @@ export function BudgetCard({ title, value, change, changeType, icon: Icon, color
           </p>
         </div>
         <div className={`p-3 rounded-lg ${getColorClasses()}`}>
-          <Icon className="h-6 w-6" />
+          {IconOrFallback ? (
+            <IconOrFallback className="h-6 w-6" />
+          ) : (
+            <div className="h-6 w-6 rounded bg-gray-200" />
+          )}
         </div>
       </div>
     </div>

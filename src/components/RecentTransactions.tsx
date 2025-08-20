@@ -3,7 +3,8 @@
 import { ArrowUpRight, ShoppingCart, Car, Home, Utensils } from 'lucide-react';
 import { useTransactions } from '@/hooks/useTransactions';
 
-const getCategoryIcon = (categoryName: string) => {
+const getCategoryIcon = (categoryName?: string) => {
+  if (!categoryName) return ArrowUpRight;
   switch (categoryName.toLowerCase()) {
     case 'jedzenie':
       return ShoppingCart;
@@ -64,6 +65,12 @@ export function RecentTransactions() {
     return (
       <div className="text-center py-8">
         <p className="text-red-600">Błąd podczas ładowania transakcji: {error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
+        >
+          Odśwież stronę
+        </button>
       </div>
     );
   }
@@ -83,14 +90,18 @@ export function RecentTransactions() {
   return (
     <div className="space-y-4">
       {recentTransactions.map((transaction) => {
-        const IconComponent = getCategoryIcon(transaction.category.name);
+        const IconComponent = getCategoryIcon(transaction.category?.name);
         const amount = Number(transaction.amount);
-        
+
         return (
           <div key={transaction.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
             <div className="flex items-center space-x-4">
               <div className={`p-2 rounded-lg ${getCategoryColor(transaction.category.name)}`}>
-                <IconComponent className="h-5 w-5" />
+                {IconComponent ? (
+                  <IconComponent className="h-5 w-5" />
+                ) : (
+                  <ArrowUpRight className="h-5 w-5" />
+                )}
               </div>
               <div>
                 <h4 className="font-medium text-gray-900">{transaction.title}</h4>

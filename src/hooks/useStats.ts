@@ -12,7 +12,7 @@ export function useStats() {
   const { transactions, loading } = useTransactions()
 
   const stats = useMemo(() => {
-    if (loading || !transactions.length) {
+    if (loading || !transactions || transactions.length === 0) {
       return {
         income: 0,
         expenses: 0,

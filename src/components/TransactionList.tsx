@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { Edit, Trash2, Plus, Minus } from 'lucide-react'
 import { useTransactions } from '@/hooks/useTransactions'
+import { EditTransactionModal } from './EditTransactionModal'
 
 interface TransactionListProps {
   searchTerm: string
@@ -14,6 +15,8 @@ export function TransactionList({ searchTerm, category }: TransactionListProps) 
   const { data: session } = useSession()
   const { transactions, loading, error } = useTransactions()
   const [filteredTransactions, setFilteredTransactions] = useState<any[]>([])
+  const [editingTransaction, setEditingTransaction] = useState<any>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   useEffect(() => {
     if (!transactions) return
@@ -58,6 +61,16 @@ export function TransactionList({ searchTerm, category }: TransactionListProps) 
       console.error('Błąd usuwania:', error)
       alert('Błąd podczas usuwania transakcji')
     }
+  }
+
+  const handleEdit = (transaction: any) => {
+    setEditingTransaction(transaction)
+    setShowEditModal(true)
+  }
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false)
+    setEditingTransaction(null)
   }
 
   const getCategoryColor = (categoryName: string) => {
@@ -129,63 +142,74 @@ export function TransactionList({ searchTerm, category }: TransactionListProps) 
   }
 
   return (
-    <div className="divide-y divide-gray-200">
-      {filteredTransactions.map((transaction) => {
-        const amount = Number(transaction.amount)
-        const isIncome = transaction.type === 'INCOME'
+    <>
+      <div className="divide-y divide-gray-200">
+        {filteredTransactions.map((transaction) => {
+          const amount = Number(transaction.amount)
+          const isIncome = transaction.type === 'INCOME'
 
-        return (
-          <div key={transaction.id} className="p-6 hover:bg-gray-50 transition-colors">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className={`p-2 rounded-lg ${isIncome ? 'bg-green-100' : 'bg-red-100'}`}>
-                  {isIncome ? (
-                    <Plus className={`h-5 w-5 ${isIncome ? 'text-green-600' : 'text-red-600'}`} />
-                  ) : (
-                    <Minus className={`h-5 w-5 ${isIncome ? 'text-green-600' : 'text-red-600'}`} />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-900">{transaction.title}</h3>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(transaction.category.name)}`}>
-                      {transaction.category.name}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {new Date(transaction.date).toLocaleDateString('pl-PL')}
-                    </span>
-                    {transaction.description && (
-                      <span className="text-sm text-gray-500">• {transaction.description}</span>
+          return (
+            <div key={transaction.id} className="p-6 hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className={`p-2 rounded-lg ${isIncome ? 'bg-green-100' : 'bg-red-100'}`}>
+                    {isIncome ? (
+                      <Plus className={`h-5 w-5 ${isIncome ? 'text-green-600' : 'text-red-600'}`} />
+                    ) : (
+                      <Minus className={`h-5 w-5 ${isIncome ? 'text-green-600' : 'text-red-600'}`} />
                     )}
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900">{transaction.title}</h3>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(transaction.category.name)}`}>
+                        {transaction.category.name}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {new Date(transaction.date).toLocaleDateString('pl-PL')}
+                      </span>
+                      {transaction.description && (
+                        <span className="text-sm text-gray-500">• {transaction.description}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className={`font-semibold text-lg ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
+                    {isIncome ? '+' : '-'}{Math.abs(amount).toFixed(2)} zł
+                  </span>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => handleEdit(transaction)}
+                      className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                      title="Edytuj"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(transaction.id)}
+                      className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Usuń"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </div>
-
-              <div className="flex items-center space-x-2">
-                <span className={`font-semibold text-lg ${isIncome ? 'text-green-600' : 'text-red-600'}`}>
-                  {isIncome ? '+' : '-'}{Math.abs(amount).toFixed(2)} zł
-                </span>
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => {/* TODO: Implement edit */}}
-                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                    title="Edytuj"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(transaction.id)}
-                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                    title="Usuń"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
             </div>
-          </div>
-        )
-      })}
-    </div>
+          )
+        })}
+      </div>
+
+      {/* Edit Transaction Modal */}
+      {showEditModal && editingTransaction && (
+        <EditTransactionModal
+          isOpen={showEditModal}
+          onClose={handleCloseEditModal}
+          transaction={editingTransaction}
+        />
+      )}
+    </>
   )
 }

@@ -46,15 +46,27 @@
 W panelu Vercel dodaj następujące zmienne środowiskowe:
 
 ```env
+# Database
+DATABASE_URL=your_database_url_here
+
+# NextAuth
+NEXTAUTH_SECRET=your_nextauth_secret_here
+NEXTAUTH_URL=https://your-domain.vercel.app
+
+# Google OAuth (opcjonalne)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
 # OpenAI API (opcjonalne - dla funkcji AI)
 OPENAI_API_KEY=your_openai_api_key_here
 
-# Baza danych (gdy dodasz Prisma)
-DATABASE_URL=your_database_url_here
+# Email Configuration (dla zaproszeń)
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password
+EMAIL_FROM=your_email@gmail.com
 
-# NextAuth (gdy dodasz autoryzację)
-NEXTAUTH_SECRET=your_nextauth_secret_here
-NEXTAUTH_URL=https://your-domain.vercel.app
+# Resend (Email) - alternatywa
+RESEND_API_KEY=your_resend_api_key
 ```
 
 ## 🗄️ Konfiguracja bazy danych

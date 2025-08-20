@@ -10,7 +10,11 @@ import {
   Settings,
   Plus,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Tag,
+  Banknote,
+  Repeat,
+  Receipt
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -18,8 +22,12 @@ import { usePathname } from 'next/navigation'
 const menuItems = [
   { name: 'Dashboard', icon: Home, href: '/' },
   { name: 'Transakcje', icon: CreditCard, href: '/transactions' },
+  { name: 'Kredyty', icon: Banknote, href: '/credits' },
+  { name: 'Płatności stałe', icon: Repeat, href: '/recurring-payments' },
+  { name: 'Rachunki', icon: Receipt, href: '/bills' },
   { name: 'Analizy', icon: BarChart3, href: '/analytics' },
   { name: 'Rodzina', icon: Users, href: '/family' },
+  { name: 'Kategorie', icon: Tag, href: '/categories' },
   { name: 'Raporty', icon: FileText, href: '/reports' },
   { name: 'Ustawienia', icon: Settings, href: '/settings' },
 ]

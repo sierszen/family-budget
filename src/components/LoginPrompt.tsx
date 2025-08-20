@@ -61,14 +61,20 @@ export function LoginPrompt() {
         console.log('Odpowiedź serwera:', data)
 
         if (!response.ok) {
-          if (data.details) {
+          if (response.status === 409 && data.error?.includes('już istnieje')) {
+            setError('Użytkownik z tym emailem już istnieje. Spróbuj się zalogować zamiast rejestrować.')
+            setIsLogin(true) // Przełącz na tryb logowania
+          } else if (response.ok && data.message?.includes('aktywowane')) {
+            // Konto zostało aktywowane - nie pokazuj błędu, tylko komunikat sukcesu
+            console.log('Konto aktywowane:', data.message)
+          } else if (data.details) {
             setError(`${data.error}: ${Array.isArray(data.details) ? data.details.join(', ') : data.details}`)
           } else {
             setError(data.error || 'Błąd podczas rejestracji')
           }
         } else {
-          // Po udanej rejestracji, zaloguj użytkownika
-          console.log('Rejestracja udana, loguję użytkownika...')
+          // Po udanej rejestracji lub aktywacji konta, zaloguj użytkownika
+          console.log('Rejestracja/aktywacja udana, loguję użytkownika...')
           const result = await signIn('credentials', {
             email: formData.email,
             password: formData.password,

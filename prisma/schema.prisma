@@ -26,6 +26,7 @@ model User {
   transactions  Transaction[]
   budgetLimits  BudgetLimit[]
   notifications Notification[]
+  sentInvitations FamilyInvitation[] @relation("Inviter")
 
   @@map("users")
 }
@@ -42,6 +43,10 @@ model Family {
   transactions Transaction[]
   budgetLimits BudgetLimit[]
   categories  Category[]
+  credits     Credit[]
+  recurringPayments RecurringPayment[]
+  bills       Bill[]
+  invitations FamilyInvitation[]
 
   @@map("families")
 }
@@ -116,6 +121,49 @@ model Notification {
   @@map("notifications")
 }
 
+model Credit {
+  id              String    @id @default(cuid())
+  name            String    // Nazwa kredytu (np. "Kredyt hipoteczny")
+  purpose         String    // Cel kredytu (np. "Zakup mieszkania")
+  totalAmount     Decimal   @db.Decimal(12, 2) // Kwota całkowita
+  interestRate    Decimal   @db.Decimal(5, 4)  // Oprocentowanie roczne (np. 0.0450 = 4.5%)
+  termInMonths    Int       // Okres kredytowania w miesiącach
+  monthlyPayment  Decimal   @db.Decimal(10, 2) // Wysokość raty miesięcznej
+  startDate       DateTime  // Data rozpoczęcia kredytu
+  endDate         DateTime  // Data zakończenia kredytu
+  remainingCapital Decimal  @db.Decimal(12, 2) // Pozostały kapitał
+  totalPaidInterest Decimal @db.Decimal(12, 2) @default(0) // Suma zapłaconych odsetek
+  status          CreditStatus @default(ACTIVE)
+  familyId        String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relacje
+  family          Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  payments        CreditPayment[]
+
+  @@map("credits")
+}
+
+model CreditPayment {
+  id          String    @id @default(cuid())
+  creditId    String
+  paymentNumber Int     // Numer raty
+  dueDate     DateTime  // Data płatności
+  amount      Decimal   @db.Decimal(10, 2) // Kwota raty
+  capitalPart Decimal   @db.Decimal(10, 2) // Część kapitałowa
+  interestPart Decimal  @db.Decimal(10, 2) // Część odsetkowa
+  status      PaymentStatus @default(PENDING)
+  paidDate    DateTime? // Data faktycznej płatności
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relacje
+  credit      Credit    @relation(fields: [creditId], references: [id], onDelete: Cascade)
+
+  @@map("credit_payments")
+}
+
 enum UserRole {
   ADMIN
   MEMBER
@@ -138,4 +186,121 @@ enum NotificationType {
   TRANSACTION
   SYSTEM
   REMINDER
+}
+
+enum CreditStatus {
+  ACTIVE
+  PAID_OFF
+  DEFAULTED
+  REFINANCED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  PARTIAL
+}
+
+enum RecurringPaymentType {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUALLY
+  ANNUALLY
+  CUSTOM
+}
+
+enum BillStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model RecurringPayment {
+  id          String    @id @default(cuid())
+  name        String    // Nazwa płatności (np. "Śmieci", "Szkoła")
+  description String?   // Opis płatności
+  amount      Decimal   @db.Decimal(10, 2) // Kwota płatności
+  type        RecurringPaymentType // Typ płatności (miesięczna, kwartalna, etc.)
+  customDays  Int?      // Liczba dni dla płatności niestandardowej
+  startDate   DateTime  // Data rozpoczęcia płatności
+  endDate     DateTime? // Data zakończenia (opcjonalna)
+  nextDueDate DateTime  // Następny termin płatności
+  isActive    Boolean   @default(true) // Czy płatność jest aktywna
+  familyId    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relacje
+  family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  payments    RecurringPaymentHistory[]
+
+  @@map("recurring_payments")
+}
+
+model RecurringPaymentHistory {
+  id                  String    @id @default(cuid())
+  recurringPaymentId  String
+  dueDate             DateTime  // Termin płatności
+  amount              Decimal   @db.Decimal(10, 2) // Kwota płatności
+  status              PaymentStatus @default(PENDING)
+  paidDate            DateTime? // Data faktycznej płatności
+  notes               String?   // Dodatkowe notatki
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relacje
+  recurringPayment    RecurringPayment @relation(fields: [recurringPaymentId], references: [id], onDelete: Cascade)
+
+  @@map("recurring_payment_history")
+}
+
+model Bill {
+  id          String    @id @default(cuid())
+  name        String    // Nazwa rachunku (np. "Prąd - styczeń 2024")
+  description String?   // Opis rachunku
+  amount      Decimal   @db.Decimal(10, 2) // Kwota rachunku
+  dueDate     DateTime  // Termin płatności
+  status      BillStatus @default(PENDING)
+  paidDate    DateTime? // Data faktycznej płatności
+  billNumber  String?   // Numer rachunku
+  provider    String?   // Dostawca (np. "Tauron", "PGE")
+  category    String?   // Kategoria rachunku (np. "Prąd", "Gaz", "Woda")
+  notes       String?   // Dodatkowe notatki
+  familyId    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relacje
+  family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@map("bills")
+}
+
+model FamilyInvitation {
+  id          String    @id @default(cuid())
+  email       String    // Email zapraszanego użytkownika
+  name        String?   // Nazwa zapraszanego użytkownika (opcjonalna)
+  role        UserRole  @default(MEMBER) // Rola w rodzinie
+  status      InvitationStatus @default(PENDING)
+  token       String    @unique // Unikalny token do weryfikacji
+  expiresAt   DateTime  // Data wygaśnięcia zaproszenia
+  familyId    String
+  invitedBy   String    // ID użytkownika, który wysłał zaproszenie
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relacje
+  family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  inviter     User      @relation("Inviter", fields: [invitedBy], references: [id])
+
+  @@map("family_invitations")
 }

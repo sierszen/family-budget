@@ -1,15 +1,9 @@
 'use client';
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { useEffect, useState } from 'react'
 
-const data = [
-  { name: 'Jedzenie', value: 1200, color: '#3B82F6' },
-  { name: 'Transport', value: 800, color: '#10B981' },
-  { name: 'Rozrywka', value: 600, color: '#F59E0B' },
-  { name: 'Mieszkanie', value: 1500, color: '#EF4444' },
-  { name: 'Zdrowie', value: 400, color: '#8B5CF6' },
-  { name: 'Inne', value: 300, color: '#6B7280' },
-];
+interface CategoryPoint { name: string; value: number; color?: string }
 
 const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] }) => {
   if (active && payload && payload.length) {
@@ -24,6 +18,39 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: any[] 
 };
 
 export function ExpenseChart() {
+  const [data, setData] = useState<CategoryPoint[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/analytics/expenses-by-category?days=30', { cache: 'no-store' })
+        if (!res.ok) throw new Error('Błąd pobierania danych wykresu')
+        const json = await res.json()
+        const points: CategoryPoint[] = Array.isArray(json.data) && json.data.length
+          ? json.data.map((d: any) => ({ name: String(d.name || 'Inne'), value: Number(d.value || 0), color: d.color }))
+          : []
+        setData(points)
+      } catch (e) {
+        setError('Błąd sieci lub brak danych')
+        setData([])
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (error) {
+    return <div className="text-sm text-red-600">{error}</div>
+  }
+
+  if (!data) {
+    return <div className="h-80 flex items-center justify-center text-gray-500 text-sm">Ładowanie danych...</div>
+  }
+
+  if (data.length === 0) {
+    return <div className="h-80 flex items-center justify-center text-gray-500 text-sm">Brak danych w ostatnich 30 dniach</div>
+  }
+
   return (
     <div className="h-80">
       <ResponsiveContainer width="100%" height="100%">
@@ -38,7 +65,7 @@ export function ExpenseChart() {
             dataKey="value"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell key={`cell-${index}`} fill={entry.color || '#6B7280'} />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
+import { authOptions } from '@/lib/auth'
 
 // GET - pobierz dane rodziny
 export async function GET() {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 })
@@ -44,7 +45,7 @@ export async function GET() {
 // PUT - zaktualizuj dane rodziny
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 })
@@ -95,7 +96,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - usuń rodzinę (tylko ADMIN)
 export async function DELETE() {
   try {
-    const session = await getServerSession()
+    const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Nieautoryzowany' }, { status: 401 })

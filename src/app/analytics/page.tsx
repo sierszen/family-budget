@@ -17,13 +17,13 @@ export default function AnalyticsPage() {
   const loading = statsLoading || transactionsLoading;
 
   // Oblicz statystyki
-  const averageDailyExpenses = transactions.length > 0 
-    ? (stats.expenses / 30).toFixed(0) 
+  const averageDailyExpenses = transactions.length > 0
+    ? (stats.expenses / 30).toFixed(0)
     : '0';
-  
+
   const totalTransactions = transactions.length;
-  
-  const topCategory = transactions.length > 0 
+
+  const topCategory = transactions.length > 0
     ? transactions.reduce((acc, transaction) => {
         const category = transaction.category.name;
         acc[category] = (acc[category] || 0) + Number(transaction.amount);

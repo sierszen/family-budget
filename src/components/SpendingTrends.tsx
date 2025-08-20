@@ -1,28 +1,19 @@
 'use client';
 
+import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useTransactions } from '@/hooks/useTransactions';
 
 interface SpendingTrendsProps {
   period: string;
 }
 
-const data = [
-  { date: '1 Sty', wydatki: 120, przychody: 0, oszczędności: 0 },
-  { date: '2 Sty', wydatki: 85, przychody: 0, oszczędności: 0 },
-  { date: '3 Sty', wydatki: 200, przychody: 0, oszczędności: 0 },
-  { date: '4 Sty', wydatki: 150, przychody: 0, oszczędności: 0 },
-  { date: '5 Sty', wydatki: 95, przychody: 0, oszczędności: 0 },
-  { date: '6 Sty', wydatki: 180, przychody: 0, oszczędności: 0 },
-  { date: '7 Sty', wydatki: 120, przychody: 0, oszczędności: 0 },
-  { date: '8 Sty', wydatki: 0, przychody: 3200, oszczędności: 3200 },
-  { date: '9 Sty', wydatki: 160, przychody: 0, oszczędności: 3040 },
-  { date: '10 Sty', wydatki: 140, przychody: 0, oszczędności: 2900 },
-  { date: '11 Sty', wydatki: 90, przychody: 0, oszczędności: 2810 },
-  { date: '12 Sty', wydatki: 220, przychody: 0, oszczędności: 2590 },
-  { date: '13 Sty', wydatki: 1800, przychody: 0, oszczędności: 790 },
-  { date: '14 Sty', wydatki: 85, przychody: 0, oszczędności: 705 },
-  { date: '15 Sty', wydatki: 120, przychody: 0, oszczędności: 585 },
-];
+interface ChartData {
+  date: string;
+  wydatki: number;
+  przychody: number;
+  oszczędności: number;
+}
 
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
   if (active && payload && payload.length) {
@@ -41,6 +32,97 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
 };
 
 export function SpendingTrends({ period }: SpendingTrendsProps) {
+  const { transactions, loading } = useTransactions();
+
+  const chartData = useMemo(() => {
+    if (loading || !transactions.length) {
+      return [];
+    }
+
+    // Grupuj transakcje według daty
+    const groupedByDate = transactions.reduce((acc, transaction) => {
+      const date = new Date(transaction.date).toLocaleDateString('pl-PL', {
+        day: 'numeric',
+        month: 'short'
+      });
+
+      if (!acc[date]) {
+        acc[date] = { date, wydatki: 0, przychody: 0, oszczędności: 0 };
+      }
+
+      if (transaction.type === 'EXPENSE') {
+        acc[date].wydatki += Number(transaction.amount);
+      } else {
+        acc[date].przychody += Number(transaction.amount);
+      }
+
+      return acc;
+    }, {} as Record<string, ChartData>);
+
+    // Konwertuj na tablicę i oblicz oszczędności
+    const data: ChartData[] = Object.values(groupedByDate).map((item, index, array) => {
+      const previousSavings = index > 0 ? array[index - 1]?.oszczędności || 0 : 0;
+      const oszczędności = previousSavings + item.przychody - item.wydatki;
+
+      return {
+        ...item,
+        oszczędności: Math.max(0, oszczędności) // Nie pokazuj negatywnych oszczędności
+      };
+    });
+
+    return data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [transactions, loading]);
+
+  const stats = useMemo(() => {
+    if (!transactions.length) {
+      return {
+        averageDailyExpenses: 0,
+        highestExpense: 0,
+        daysWithoutExpenses: 0
+      };
+    }
+
+    const expenses = transactions.filter(t => t.type === 'EXPENSE');
+    const totalExpenses = expenses.reduce((sum, t) => sum + Number(t.amount), 0);
+    const averageDailyExpenses = totalExpenses / 30; // Przybliżenie
+
+    const highestExpense = Math.max(...expenses.map(t => Number(t.amount)));
+
+    // Liczba dni z wydatkami
+    const daysWithExpenses = new Set(expenses.map(t =>
+      new Date(t.date).toDateString()
+    )).size;
+    const daysWithoutExpenses = 30 - daysWithExpenses; // Przybliżenie
+
+    return {
+      averageDailyExpenses: Math.round(averageDailyExpenses),
+      highestExpense: Math.round(highestExpense),
+      daysWithoutExpenses: Math.max(0, daysWithoutExpenses)
+    };
+  }, [transactions]);
+
+  if (loading) {
+    return (
+      <div className="h-80 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Ładowanie danych...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!chartData.length) {
+    return (
+      <div className="h-80 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">Brak danych do wyświetlenia</p>
+          <p className="text-sm text-gray-400">Dodaj transakcje, aby zobaczyć trendy</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -63,7 +145,7 @@ export function SpendingTrends({ period }: SpendingTrendsProps) {
 
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis
               dataKey="date"
@@ -108,15 +190,15 @@ export function SpendingTrends({ period }: SpendingTrendsProps) {
       <div className="mt-4 grid grid-cols-3 gap-4 text-center">
         <div>
           <p className="text-sm text-gray-600">Średnie dzienne wydatki</p>
-          <p className="text-lg font-semibold text-red-600">208 zł</p>
+          <p className="text-lg font-semibold text-red-600">{stats.averageDailyExpenses} zł</p>
         </div>
         <div>
           <p className="text-sm text-gray-600">Najwyższy wydatek</p>
-          <p className="text-lg font-semibold text-red-600">1,800 zł</p>
+          <p className="text-lg font-semibold text-red-600">{stats.highestExpense} zł</p>
         </div>
         <div>
           <p className="text-sm text-gray-600">Dni bez wydatków</p>
-          <p className="text-lg font-semibold text-green-600">1</p>
+          <p className="text-lg font-semibold text-green-600">{stats.daysWithoutExpenses}</p>
         </div>
       </div>
     </div>

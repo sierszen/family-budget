@@ -2,9 +2,13 @@
 
 import { Search, Bell, User, Settings, LogOut, LogIn } from 'lucide-react';
 import { useSession, signIn, signOut } from 'next-auth/react';
+import { useState, useEffect } from 'react';
+import { PaymentReminders } from './CreditReminders';
 
 export function Header() {
   const { data: session, status } = useSession();
+  const [showPaymentReminders, setShowPaymentReminders] = useState(false);
+  const [reminderCount, setReminderCount] = useState(0);
 
   const handleAuth = () => {
     if (session) {
@@ -13,6 +17,45 @@ export function Header() {
       signIn('google');
     }
   };
+
+  // Pobierz liczbę przypomnień o kredytach
+  const fetchReminderCount = async () => {
+    if (!session) return;
+
+    try {
+      const response = await fetch('/api/notifications/credit-reminders');
+      if (response.ok) {
+        const data = await response.json();
+        setReminderCount(data.totalReminders || 0);
+      }
+    } catch (error) {
+      console.error('Błąd pobierania liczby przypomnień:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchReminderCount();
+    // Sprawdzaj raz dziennie o 9:00
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+
+    const timeUntilNextCheck = tomorrow.getTime() - now.getTime();
+
+    const interval = setInterval(fetchReminderCount, 24 * 60 * 60 * 1000); // 24 godziny
+    const initialTimeout = setTimeout(() => {
+      fetchReminderCount();
+      // Po pierwszym sprawdzeniu o 9:00, ustaw regularny interwał
+      const regularInterval = setInterval(fetchReminderCount, 24 * 60 * 60 * 1000);
+      return () => clearInterval(regularInterval);
+    }, timeUntilNextCheck);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialTimeout);
+    };
+  }, [session]);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -37,13 +80,21 @@ export function Header() {
 
           {/* Prawa strona */}
           <div className="flex items-center space-x-4">
-            {/* Powiadomienia */}
-            <button className="p-2 text-gray-400 hover:text-gray-600 relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                3
-              </span>
-            </button>
+            {/* Powiadomienia o kredytach */}
+            {session && (
+              <button
+                onClick={() => setShowPaymentReminders(true)}
+                className="p-2 text-gray-400 hover:text-gray-600 relative"
+                title="Przypomnienia o płatnościach"
+              >
+                <Bell className="h-5 w-5" />
+                {reminderCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {reminderCount}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Ustawienia */}
             <button className="p-2 text-gray-400 hover:text-gray-600">
@@ -91,6 +142,12 @@ export function Header() {
           </div>
         </div>
       </div>
+
+      {/* Modal z przypomnieniami o płatnościach */}
+      <PaymentReminders
+        isOpen={showPaymentReminders}
+        onClose={() => setShowPaymentReminders(false)}
+      />
     </header>
   );
 }

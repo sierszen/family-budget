@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { Brain, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react'
 
@@ -17,16 +17,28 @@ export function AIInsights() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (session) {
-      fetchInsights()
+  const getIconByType = (type: 'positive' | 'negative' | 'warning') => {
+    switch (type) {
+      case 'positive':
+        return TrendingUp
+      case 'negative':
+        return TrendingDown
+      case 'warning':
+        return AlertTriangle
+      default:
+        return TrendingUp
     }
-  }, [session])
+  }
 
-  const fetchInsights = async () => {
+  const fetchInsights = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/insights')
+              const response = await fetch(`/api/insights?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        })
 
       if (!response.ok) {
         throw new Error('Błąd podczas pobierania podpowiedzi AI')
@@ -35,7 +47,21 @@ export function AIInsights() {
       const data = await response.json()
 
       if (data.insights && Array.isArray(data.insights)) {
-        setInsights(data.insights)
+        // Używamy tylko znanych pól i mapujemy ikonę po typie, ignorując ewentualne niepoprawne pola z API
+        const sanitized = data.insights
+          .filter((it: any) => it && typeof it.title === 'string' && typeof it.description === 'string')
+          .map((it: any) => {
+            const type: 'positive' | 'negative' | 'warning' =
+              it.type === 'negative' ? 'negative' : it.type === 'warning' ? 'warning' : 'positive'
+            return {
+              type,
+              title: it.title,
+              description: it.description,
+              icon: getIconByType(type)
+            } as Insight
+          })
+
+        setInsights(sanitized)
       } else {
         // Fallback insights jeśli API nie zwraca danych
         setInsights([
@@ -74,7 +100,13 @@ export function AIInsights() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (session) {
+      fetchInsights()
+    }
+  }, [session, fetchInsights])
 
   if (loading) {
     return (
@@ -94,6 +126,12 @@ export function AIInsights() {
       <div className="text-center py-4">
         <Brain className="h-8 w-8 text-gray-400 mx-auto mb-2" />
         <p className="text-sm text-gray-500">Błąd ładowania podpowiedzi AI</p>
+        <button
+          onClick={fetchInsights}
+          className="mt-2 text-sm text-blue-600 hover:text-blue-800 underline"
+        >
+          Spróbuj ponownie
+        </button>
       </div>
     )
   }

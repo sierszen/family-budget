@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { Users, Edit, Trash2, Save, X, AlertTriangle } from 'lucide-react'
+import { Users, Edit, Trash2, Save, X, AlertTriangle, Plus, UserPlus, Crown, Mail, Clock } from 'lucide-react'
+import { InviteModal } from '@/components/InviteModal'
+import { InvitationsList } from '@/components/InvitationsList'
 
 interface Family {
   id: string
@@ -32,17 +34,34 @@ export default function FamilyPage() {
   const [isEditing, setIsEditing] = useState(false)
   const [editData, setEditData] = useState({ name: '', description: '' })
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showAddMember, setShowAddMember] = useState(false)
+  const [newMember, setNewMember] = useState({ name: '', email: '', role: 'MEMBER' })
+  const [showAddCategory, setShowAddCategory] = useState(false)
+  const [newCategory, setNewCategory] = useState({ name: '', icon: '📊', color: '#3b82f6', type: 'EXPENSE' })
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteData, setInviteData] = useState({ email: '', name: '', role: 'MEMBER' })
+  const [invitations, setInvitations] = useState<any[]>([])
+  const [sendingInvite, setSendingInvite] = useState(false)
+  const [showInvitations, setShowInvitations] = useState(false)
 
   useEffect(() => {
     if (session) {
       fetchFamilyData()
+      if (userRole === 'ADMIN') {
+        fetchInvitations()
+      }
     }
-  }, [session])
+  }, [session, userRole])
 
   const fetchFamilyData = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/family')
+      const response = await fetch('/api/family', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
 
       if (!response.ok) {
         throw new Error('Błąd podczas pobierania danych rodziny')
@@ -60,6 +79,19 @@ export default function FamilyPage() {
       setError(err instanceof Error ? err.message : 'Nieznany błąd')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchInvitations = async () => {
+    try {
+      const response = await fetch('/api/family/invitations')
+      if (!response.ok) {
+        throw new Error('Błąd podczas pobierania zaproszeń')
+      }
+      const data = await response.json()
+      setInvitations(data.invitations || [])
+    } catch (err) {
+      console.error('Błąd pobierania zaproszeń:', err)
     }
   }
 
@@ -119,6 +151,127 @@ export default function FamilyPage() {
       alert(err instanceof Error ? err.message : 'Błąd podczas usuwania')
     } finally {
       setShowDeleteConfirm(false)
+    }
+  }
+
+  const handleAddMember = async () => {
+    try {
+      const response = await fetch('/api/family/members', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newMember)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Błąd podczas dodawania członka')
+      }
+
+      alert('Członek rodziny został dodany pomyślnie!')
+      setShowAddMember(false)
+      setNewMember({ name: '', email: '', role: 'MEMBER' })
+      fetchFamilyData() // Odśwież dane
+    } catch (err) {
+      console.error('Błąd dodawania członka:', err)
+      alert(err instanceof Error ? err.message : 'Błąd podczas dodawania członka')
+    }
+  }
+
+  const handleSendInvitation = async (formData: any) => {
+    try {
+      setSendingInvite(true)
+      const response = await fetch('/api/family/invitations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Błąd podczas wysyłania zaproszenia')
+      }
+
+      alert('Zaproszenie zostało wysłane pomyślnie!')
+      setShowInviteModal(false)
+      fetchInvitations() // Odśwież listę zaproszeń
+    } catch (err) {
+      console.error('Błąd wysyłania zaproszenia:', err)
+      // Przekaż błąd do modala zamiast alert
+      throw err
+    } finally {
+      setSendingInvite(false)
+    }
+  }
+
+  const handleCancelInvitation = async (invitationId: string) => {
+    try {
+      const response = await fetch(`/api/family/invitations?id=${invitationId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Błąd podczas anulowania zaproszenia')
+      }
+
+      alert('Zaproszenie zostało anulowane pomyślnie!')
+      fetchInvitations() // Odśwież listę zaproszeń
+    } catch (err) {
+      console.error('Błąd anulowania zaproszenia:', err)
+      alert(err instanceof Error ? err.message : 'Błąd podczas anulowania zaproszenia')
+    }
+  }
+
+  const handleRemoveMember = async (memberId: string) => {
+    if (!confirm('Czy na pewno chcesz usunąć tego członka z rodziny?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/family/members?id=${memberId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Błąd podczas usuwania członka')
+      }
+
+      alert('Członek został usunięty z rodziny pomyślnie!')
+      fetchFamilyData() // Odśwież dane
+    } catch (err) {
+      console.error('Błąd usuwania członka:', err)
+      alert(err instanceof Error ? err.message : 'Błąd podczas usuwania członka')
+    }
+  }
+
+  const handleAddCategory = async () => {
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newCategory)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Błąd podczas dodawania kategorii')
+      }
+
+      alert('Kategoria została dodana pomyślnie!')
+      setShowAddCategory(false)
+      setNewCategory({ name: '', icon: '📊', color: '#3b82f6', type: 'EXPENSE' })
+      fetchFamilyData() // Odśwież dane
+    } catch (err) {
+      console.error('Błąd dodawania kategorii:', err)
+      alert(err instanceof Error ? err.message : 'Błąd podczas dodawania kategorii')
     }
   }
 
@@ -261,21 +414,57 @@ export default function FamilyPage() {
 
           {/* Members */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Członkowie rodziny</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Członkowie rodziny</h2>
+              {userRole === 'ADMIN' && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setShowInviteModal(true)}
+                    className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <Mail className="h-4 w-4" />
+                    <span>Zaproś email</span>
+                  </button>
+                  <button
+                    onClick={() => setShowAddMember(true)}
+                    className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Dodaj bezpośrednio</span>
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="space-y-3">
               {family.members.map((member) => (
                 <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900">{member.name}</p>
-                    <p className="text-sm text-gray-500">{member.email}</p>
+                  <div className="flex items-center space-x-3">
+                    <div>
+                      <p className="font-medium text-gray-900 flex items-center space-x-2">
+                        {member.name}
+                        {member.role === 'ADMIN' && <Crown className="h-4 w-4 text-yellow-500" />}
+                      </p>
+                      <p className="text-sm text-gray-500">{member.email}</p>
+                    </div>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    member.role === 'ADMIN'
-                      ? 'bg-purple-100 text-purple-800'
-                      : 'bg-blue-100 text-blue-800'
-                  }`}>
-                    {member.role === 'ADMIN' ? 'Administrator' : 'Członek'}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      member.role === 'ADMIN'
+                        ? 'bg-purple-100 text-purple-800'
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {member.role === 'ADMIN' ? 'Administrator' : 'Członek'}
+                    </span>
+                    {userRole === 'ADMIN' && member.id !== session?.user?.id && (
+                      <button
+                        onClick={() => handleRemoveMember(member.id)}
+                        className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                        title="Usuń z rodziny"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -284,19 +473,70 @@ export default function FamilyPage() {
 
         {/* Categories */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Kategorie</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Kategorie</h2>
+            {userRole === 'ADMIN' && (
+              <button
+                onClick={() => setShowAddCategory(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Dodaj kategorię</span>
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {family.categories.map((category) => (
-              <div key={category.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                <span className="text-2xl">{category.icon}</span>
-                <div>
-                  <p className="font-medium text-gray-900">{category.name}</p>
-                  <p className="text-sm text-gray-500 capitalize">{category.type.toLowerCase()}</p>
+              <div key={category.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <span className="text-2xl">{category.icon}</span>
+                  <div>
+                    <p className="font-medium text-gray-900">{category.name}</p>
+                    <p className="text-sm text-gray-500 capitalize">{category.type.toLowerCase()}</p>
+                  </div>
                 </div>
+                {userRole === 'ADMIN' && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`Czy na pewno chcesz usunąć kategorię "${category.name}"?`)) {
+                        // TODO: Implementacja usuwania kategorii
+                        alert('Funkcja usuwania kategorii będzie dostępna wkrótce!')
+                      }
+                    }}
+                    className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                    title="Usuń kategorię"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             ))}
           </div>
         </div>
+
+        {/* Invitations - tylko dla adminów */}
+        {userRole === 'ADMIN' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Zaproszenia</h2>
+              <button
+                onClick={() => setShowInvitations(!showInvitations)}
+                className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+              >
+                <Mail className="h-4 w-4" />
+                <span>{showInvitations ? 'Ukryj' : 'Pokaż'} zaproszenia</span>
+              </button>
+            </div>
+
+            {showInvitations && (
+              <InvitationsList
+                invitations={invitations}
+                onCancelInvitation={handleCancelInvitation}
+                loading={false}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -327,6 +567,159 @@ export default function FamilyPage() {
           </div>
         </div>
       )}
+
+      {/* Add Member Modal */}
+      {showAddMember && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <UserPlus className="h-6 w-6 text-blue-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Dodaj członka rodziny</h3>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Imię i nazwisko
+                </label>
+                <input
+                  type="text"
+                  value={newMember.name}
+                  onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Wprowadź imię i nazwisko"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={newMember.email}
+                  onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Wprowadź email"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rola
+                </label>
+                <select
+                  value={newMember.role}
+                  onChange={(e) => setNewMember({ ...newMember, role: e.target.value as 'ADMIN' | 'MEMBER' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="MEMBER">Członek</option>
+                  <option value="ADMIN">Administrator</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowAddMember(false)}
+                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Anuluj
+              </button>
+              <button
+                onClick={handleAddMember}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Dodaj
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Category Modal */}
+      {showAddCategory && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <Plus className="h-6 w-6 text-green-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Dodaj kategorię</h3>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nazwa kategorii
+                </label>
+                <input
+                  type="text"
+                  value={newCategory.name}
+                  onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Wprowadź nazwę kategorii"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ikona
+                </label>
+                <input
+                  type="text"
+                  value={newCategory.icon}
+                  onChange={(e) => setNewCategory({ ...newCategory, icon: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="np. 🍽️"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Kolor
+                </label>
+                <input
+                  type="color"
+                  value={newCategory.color}
+                  onChange={(e) => setNewCategory({ ...newCategory, color: e.target.value })}
+                  className="w-full h-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Typ
+                </label>
+                <select
+                  value={newCategory.type}
+                  onChange={(e) => setNewCategory({ ...newCategory, type: e.target.value as 'EXPENSE' | 'INCOME' })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="EXPENSE">Wydatek</option>
+                  <option value="INCOME">Przychód</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowAddCategory(false)}
+                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Anuluj
+              </button>
+              <button
+                onClick={handleAddCategory}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Dodaj
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Invite Modal */}
+      <InviteModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        onSend={handleSendInvitation}
+        loading={sendingInvite}
+        onShowInvitations={() => {
+          setShowInviteModal(false)
+          setShowInvitations(true)
+        }}
+      />
     </div>
   )
 }

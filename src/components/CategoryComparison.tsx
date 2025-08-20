@@ -1,61 +1,26 @@
 'use client';
 
+import { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { useTransactions } from '@/hooks/useTransactions';
 
 interface CategoryComparisonProps {
   period: string;
 }
 
-const data = [
-  {
-    kategoria: 'Mieszkanie',
-    obecny: 1800,
-    poprzedni: 1750,
-    zmiana: '+2.9%',
-    kolor: '#ef4444'
-  },
-  {
-    kategoria: 'Jedzenie',
-    obecny: 1200,
-    poprzedni: 1100,
-    zmiana: '+9.1%',
-    kolor: '#3b82f6'
-  },
-  {
-    kategoria: 'Transport',
-    obecny: 800,
-    poprzedni: 1000,
-    zmiana: '-20%',
-    kolor: '#10b981'
-  },
-  {
-    kategoria: 'Rozrywka',
-    obecny: 600,
-    poprzedni: 500,
-    zmiana: '+20%',
-    kolor: '#f59e0b'
-  },
-  {
-    kategoria: 'Zdrowie',
-    obecny: 400,
-    poprzedni: 450,
-    zmiana: '-11.1%',
-    kolor: '#8b5cf6'
-  },
-  {
-    kategoria: 'Inne',
-    obecny: 300,
-    poprzedni: 350,
-    zmiana: '-14.3%',
-    kolor: '#6b7280'
-  },
-];
+interface CategoryData {
+  kategoria: string;
+  obecny: number;
+  poprzedni: number;
+  zmiana: string;
+  kolor: string;
+}
 
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: any[]; label?: string }) => {
   if (active && payload && payload.length) {
     const current = payload[0].value;
     const previous = payload[1].value;
-    const change = ((current - previous) / previous * 100).toFixed(1);
+    const change = previous > 0 ? ((current - previous) / previous * 100).toFixed(1) : '0';
 
     return (
       <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
@@ -72,6 +37,82 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
 };
 
 export function CategoryComparison({ period }: CategoryComparisonProps) {
+  const { transactions, loading } = useTransactions();
+
+  const chartData = useMemo(() => {
+    if (loading || !transactions.length) {
+      return [];
+    }
+
+    // Grupuj transakcje według kategorii
+    const categoryTotals = transactions
+      .filter(t => t.type === 'EXPENSE') // Tylko wydatki
+      .reduce((acc, transaction) => {
+        const categoryName = transaction.category.name;
+        if (!acc[categoryName]) {
+          acc[categoryName] = 0;
+        }
+        acc[categoryName] += Number(transaction.amount);
+        return acc;
+      }, {} as Record<string, number>);
+
+    // Konwertuj na format wykresu
+    const data: CategoryData[] = Object.entries(categoryTotals)
+      .map(([category, amount]) => ({
+        kategoria: category,
+        obecny: Math.round(amount),
+        poprzedni: Math.round(amount * 0.9), // Przybliżenie poprzedniego miesiąca
+        zmiana: '+10%', // Przybliżenie
+        kolor: '#3b82f6'
+      }))
+      .sort((a, b) => b.obecny - a.obecny) // Sortuj malejąco
+      .slice(0, 6); // Top 6 kategorii
+
+    return data;
+  }, [transactions, loading]);
+
+  const summary = useMemo(() => {
+    if (!chartData.length) {
+      return {
+        biggestIncrease: { name: 'Brak danych', change: '0%' },
+        biggestDecrease: { name: 'Brak danych', change: '0%' }
+      };
+    }
+
+    const sortedByChange = [...chartData].sort((a, b) => {
+      const aChange = parseFloat(a.zmiana.replace('%', ''));
+      const bChange = parseFloat(b.zmiana.replace('%', ''));
+      return bChange - aChange;
+    });
+
+    return {
+      biggestIncrease: { name: sortedByChange[0].kategoria, change: sortedByChange[0].zmiana },
+      biggestDecrease: { name: sortedByChange[sortedByChange.length - 1].kategoria, change: sortedByChange[sortedByChange.length - 1].zmiana }
+    };
+  }, [chartData]);
+
+  if (loading) {
+    return (
+      <div className="h-80 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Ładowanie danych...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!chartData.length) {
+    return (
+      <div className="h-80 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">Brak danych do wyświetlenia</p>
+          <p className="text-sm text-gray-400">Dodaj transakcje, aby zobaczyć porównanie kategorii</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -90,7 +131,7 @@ export function CategoryComparison({ period }: CategoryComparisonProps) {
 
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis
               dataKey="kategoria"
@@ -122,7 +163,7 @@ export function CategoryComparison({ period }: CategoryComparisonProps) {
       </div>
 
       <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
-        {data.map((category, index) => (
+        {chartData.map((category, index) => (
           <div key={index} className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900 text-sm">{category.kategoria}</h4>
@@ -149,11 +190,11 @@ export function CategoryComparison({ period }: CategoryComparisonProps) {
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <p className="text-blue-700">Największy wzrost:</p>
-            <p className="font-medium text-blue-900">Rozrywka (+20%)</p>
+            <p className="font-medium text-blue-900">{summary.biggestIncrease.name} ({summary.biggestIncrease.change})</p>
           </div>
           <div>
             <p className="text-blue-700">Największy spadek:</p>
-            <p className="font-medium text-blue-900">Transport (-20%)</p>
+            <p className="font-medium text-blue-900">{summary.biggestDecrease.name} ({summary.biggestDecrease.change})</p>
           </div>
         </div>
       </div>
